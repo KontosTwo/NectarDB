@@ -8,19 +8,21 @@ defmodule NectarDb.Application do
   import Supervisor.Spec
 
   alias NectarDb.Oplog
-  alias NectarDb.OtherNodes
+  alias NectarDb.Communicator
   alias NectarDb.Store
-  alias NectarDb.Server
-  
+  alias NectarDb.Memtable
+  alias NectarDb.Pinger
+
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
       # Starts a worker by calling: NectarDb.Worker.start_link(arg)
       # {NectarDb.Worker, arg},
-      worker(Oplog,[nil]),
-      worker(Memtable,[nil]),
-      worker(OtherNodes,[nil]),    
-      worker(Store,[nil]),
+      worker(Oplog, []),
+      worker(Memtable, []),
+      worker(Communicator, []),
+      worker(Store, []),
+      worker(Pinger, [])
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
