@@ -18,6 +18,12 @@ defmodule NectarDb.Application do
   def start(_type, _args) do
     if (unquote(Mix.env()) != :test), do: Node.start(:a@localhost, :shortnames)
     # List all child processes to be supervised
+
+    # DO NOT USE Mix.env in RELEASE
+
+
+
+
     children = if (unquote(Mix.env()) != :test), do: [
       # Starts a worker by calling: NectarDb.Worker.start_link(arg)
       # {NectarDb.Worker, arg},
