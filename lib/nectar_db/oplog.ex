@@ -9,7 +9,7 @@ defmodule NectarDb.Oplog do
 
   @spec start_link(any) :: {:ok, pid}
   def start_link(_args) do
-    Agent.start_link(fn -> [] end, [name: @me])
+    Agent.start_link(fn -> [] end, name: @me)
   end
 
   @spec add_log(integer, log) :: :ok

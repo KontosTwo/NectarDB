@@ -4,11 +4,12 @@ defmodule NectarDb.Server do
   alias NectarDb.Memtable
   alias NectarDb.TaskSupervisor
 
+  @type time :: integer
   @type key :: any
   @type value :: any
   @type kv :: %{key => value}
-  @type operation :: {:write, key, value} | {:delete, key}
-  @type oplog_entry :: {integer, operation}
+  @type operation :: {:write, key, value} | {:delete, key} | {:rollback, time}
+  @type oplog_entry :: {time, operation}
 
   @doc """
     
@@ -76,6 +77,14 @@ defmodule NectarDb.Server do
     end
 
     Store.get_v(key)
+  end
+
+  @doc """
+
+  """
+  @spec rollback(time) :: :ok
+  def rollback(time) do
+
   end
 
   @doc """

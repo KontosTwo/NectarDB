@@ -9,6 +9,8 @@ defmodule ServerTest do
   import Mock
 
   setup do
+    #  gotta install epmd
+    Node.start(:a@localhost, :shortnames)    
     start_supervised!(Store)
     start_supervised!(Oplog)
     start_supervised!(Memtable)

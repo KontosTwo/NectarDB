@@ -12,9 +12,11 @@ defmodule NectarDb.Application do
   alias NectarDb.Store
   alias NectarDb.Memtable
   alias NectarDb.Pinger
+  alias NectarDb.Opqueue
+  alias NectarDb.OpqueueSupervisor
 
   def start(_type, _args) do
-    Node.start(:a@localhost, :shortnames)
+    if (unquote(Mix.env()) != :test), do: Node.start(:a@localhost, :shortnames)
     # List all child processes to be supervised
     children = if (unquote(Mix.env()) != :test), do: [
       # Starts a worker by calling: NectarDb.Worker.start_link(arg)
@@ -24,6 +26,8 @@ defmodule NectarDb.Application do
       worker(Communicator, [[]]),
       worker(Store, [[]]),
       worker(Pinger, [[]]),
+      worker(Opqueue,[4]),
+      supervisor(OpqueueSupervisor,[[]]),
       supervisor(Task.Supervisor,[[name: NectarDb.TaskSupervisor]])
     ], else: []
 
