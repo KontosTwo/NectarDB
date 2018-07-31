@@ -7,8 +7,8 @@ defmodule NectarDb.Memtable do
   @type value :: any
   @type log :: {:write, key, value} | {:delete, key} | {:read, key}
 
-  @spec start_link() :: {:ok, pid}
-  def start_link() do
+  @spec start_link(any) :: {:ok, pid}
+  def start_link(_args) do
     Agent.start_link(fn -> [] end, name: @me)
   end
 

@@ -6,8 +6,8 @@ defmodule NectarDb.Store do
   @type key :: any
   @type value :: any
 
-  @spec start_link() :: {:ok, pid}
-  def start_link() do
+  @spec start_link(any) :: {:ok, pid}
+  def start_link(_args) do
     Agent.start_link(fn -> %{} end, name: @me)
   end
 

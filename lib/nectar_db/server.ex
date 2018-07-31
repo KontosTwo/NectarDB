@@ -2,6 +2,7 @@ defmodule NectarDb.Server do
   alias NectarDb.Store
   alias NectarDb.Oplog
   alias NectarDb.Memtable
+  alias NectarDb.TaskSupervisor
 
   @type key :: any
   @type value :: any
@@ -14,11 +15,11 @@ defmodule NectarDb.Server do
   """
   @spec write(key, value) :: :ok
   def write(key, value) do
-    Task.async(fn ->
-      :os.system_time(:seconds)
+    task = Task.Supervisor.async(TaskSupervisor,fn ->
+      System.monotonic_time(:seconds)
       |> Oplog.add_log({:write, key, value})
     end)
-
+    Task.await(task)
     :ok
   end
 
@@ -27,10 +28,12 @@ defmodule NectarDb.Server do
   """
   @spec delete(key) :: :ok
   def delete(key) do
-    Task.async(fn ->
-      :os.system_time(:seconds)
+    task = Task.Supervisor.async(TaskSupervisor,fn ->
+      System.monotonic_time(:seconds)
       |> Oplog.add_log({:delete, key})
     end)
+
+    Task.await(task)
 
     :ok
   end
@@ -44,26 +47,34 @@ defmodule NectarDb.Server do
       Oplog.get_logs()
       |> List.keysort(0)
 
-    Enum.each(sorted_oplog, fn {_time, operation} ->
-      case operation do
-        {:write, key, value} ->
-          Store.store_kv(key, value)
-
-        {:delete, key} ->
-          Store.delete_k(key)
-
-        _ ->
-          nil
-      end
-    end)
-
-    Task.async(fn ->
+    memtable_task = Task.Supervisor.async(TaskSupervisor,fn ->
       Enum.each(sorted_oplog, fn {time, operation} ->
         Memtable.add_log(time, operation)
       end)
     end)
 
+    write_tasks = Enum.map sorted_oplog, fn {_time, operation} ->
+      Task.Supervisor.async(TaskSupervisor,fn ->
+        case operation do
+          {:write, key, value} ->
+            Store.store_kv(key, value)
+
+          {:delete, key} ->
+            Store.delete_k(key)
+
+          _ ->
+            nil
+        end
+      end)
+    end
+
     Oplog.flush()
+    
+    Task.await(memtable_task)
+    Enum.each write_tasks, fn write_task ->
+      Task.await(write_task)
+    end
+
     Store.get_v(key)
   end
 
@@ -72,6 +83,16 @@ defmodule NectarDb.Server do
   """
   @spec get_history() :: [oplog_entry]
   def get_history() do
-    Oplog.get_logs() ++ Memtable.get_logs()
+    task = Task.Supervisor.async(TaskSupervisor,fn ->
+      Oplog.get_logs() ++ Memtable.get_logs()
+    end)
+    Task.await task
+  end
+
+  @doc """
+
+  """
+  def health_check() do
+    Node.alive? 
   end
 end

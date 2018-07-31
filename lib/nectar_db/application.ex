@@ -14,16 +14,18 @@ defmodule NectarDb.Application do
   alias NectarDb.Pinger
 
   def start(_type, _args) do
+    Node.start(:a@localhost, :shortnames)
     # List all child processes to be supervised
-    children = [
+    children = if (unquote(Mix.env()) != :test), do: [
       # Starts a worker by calling: NectarDb.Worker.start_link(arg)
       # {NectarDb.Worker, arg},
-      worker(Oplog, []),
-      worker(Memtable, []),
-      worker(Communicator, []),
-      worker(Store, []),
-      worker(Pinger, [])
-    ]
+      worker(Oplog, [[]]),
+      worker(Memtable, [[]]),
+      worker(Communicator, [[]]),
+      worker(Store, [[]]),
+      worker(Pinger, [[]]),
+      supervisor(Task.Supervisor,[[name: NectarDb.TaskSupervisor]])
+    ], else: []
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options

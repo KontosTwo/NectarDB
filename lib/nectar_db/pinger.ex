@@ -5,8 +5,8 @@ defmodule NectarDb.Pinger do
 
   @health_check_frequency 3000
 
-  @spec start_link() :: {:ok, pid}
-  def start_link() do
+  @spec start_link(any) :: {:ok, pid}
+  def start_link(_args) do
     GenServer.start_link(__MODULE__, :no_args, name: @me)
   end
 
