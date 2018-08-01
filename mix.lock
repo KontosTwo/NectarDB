@@ -1,5 +1,8 @@
 %{
+  "gen_rpc": {:hex, :gen_rpc, "2.1.0", "c7f5bb64f105aacbff9d865928b28f7f602bbad9a414fbc36b4e3b6c6d42bd3a", [:rebar3], [{:hut, "~> 1.2", [hex: :hut, repo: "hexpm", optional: false]}, {:ssl_verify_fun, "~> 1.1", [hex: :ssl_verify_fun, repo: "hexpm", optional: false]}], "hexpm"},
   "gproc": {:hex, :gproc, "0.3.1", "ec14f40cb941bde3f940de59c11e59beb2977e90dbae72fab3ddf77743fd4ea9", [:rebar], [], "hexpm"},
+  "hut": {:hex, :hut, "1.2.0", "0089df0faa2827c605bbada88153f24fff5ea7a4be32ecf0250a7fdc2719cafb", [:"erlang.mk", :rebar, :rebar3], [], "hexpm"},
   "meck": {:hex, :meck, "0.8.11", "2c39e15ec87d847da6cf69b4a1c4af3fd850ae2a272e719e0e8751a7fe54771f", [:rebar3], [], "hexpm"},
   "mock": {:hex, :mock, "0.3.1", "994f00150f79a0ea50dc9d86134cd9ebd0d177ad60bd04d1e46336cdfdb98ff9", [:mix], [{:meck, "~> 0.8.8", [hex: :meck, repo: "hexpm", optional: false]}], "hexpm"},
+  "ssl_verify_fun": {:hex, :ssl_verify_fun, "1.1.4", "f0eafff810d2041e93f915ef59899c923f4568f4585904d010387ed74988e77b", [:make, :mix, :rebar3], [], "hexpm"},
 }

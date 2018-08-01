@@ -18,8 +18,7 @@ defmodule NectarDb.Server do
   @spec write(key, value) :: :ok
   def write(key, value) do
     task = Task.Supervisor.async(TaskSupervisor,fn ->
-      Clock.get_time()
-      |> Oplog.add_log({:write, key, value})
+      Oplog.add_log({Clock.get_time(),{:write, key, value}})
     end)
     Task.await(task)
     :ok
@@ -31,8 +30,7 @@ defmodule NectarDb.Server do
   @spec delete(key) :: :ok
   def delete(key) do
     task = Task.Supervisor.async(TaskSupervisor,fn ->
-      Clock.get_time()
-      |> Oplog.add_log({:delete, key})
+      Oplog.add_log({Clock.get_time(),{:delete, key}})
     end)
 
     Task.await(task)
@@ -87,12 +85,8 @@ defmodule NectarDb.Server do
     Store.get_v(key)
   end
 
-  @doc """
-    Assumes that oplog_entries is sorted
-  """
   @spec rollback_oplog([oplog_entry],integer) :: [oplog_entry]
-  defp rollback_oplog(oplog_entries,to) do
-    require IEx; IEx.pry
+  defp rollback_oplog(oplog_entries,to) when is_list(oplog_entries) and is_integer(to) do
     Enum.reduce oplog_entries, [], fn {time,op}, acc ->
       if time > to, do: acc, else: [{time,op} | acc]
     end
@@ -102,10 +96,9 @@ defmodule NectarDb.Server do
 
   """
   @spec rollback(time) :: :ok
-  def rollback(time) do
+  def rollback(time) when is_integer(time) do
     task = Task.Supervisor.async(TaskSupervisor,fn ->
-      Clock.get_time()
-      |> Oplog.add_log({:rollback, time})
+      Oplog.add_log({Clock.get_time(),{:rollback, time}})
     end)
 
     Task.await(task)

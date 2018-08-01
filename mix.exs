@@ -15,7 +15,7 @@ defmodule NectarDb.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger,:gen_rpc],
       mod: {NectarDb.Application, []}
     ]
   end
@@ -27,6 +27,7 @@ defmodule NectarDb.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       {:gproc, "0.3.1"},
       {:mock, "~> 0.3.0", only: :test},
+      {:gen_rpc, "~> 2.0"},
     ]
   end
 

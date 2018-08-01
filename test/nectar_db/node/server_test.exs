@@ -105,8 +105,53 @@ defmodule ServerTest do
     test "rollback for 1 operation" do
       TestTimekeeper.set_time(5)
       Server.write(1,2)
+      TestTimekeeper.set_time(6)      
       Server.rollback(3)
       assert nil == Server.read(1)
+    end
+
+    test "rollback for 3 operation" do
+      TestTimekeeper.set_time(3)
+      Server.write(1,2)
+      TestTimekeeper.set_time(4)
+      Server.write(2,2)
+      TestTimekeeper.set_time(5)
+      Server.write(3,2)
+      TestTimekeeper.set_time(6)      
+      Server.rollback(1)
+      assert nil == Server.read(1)
+      assert nil == Server.read(2)
+      assert nil == Server.read(3)
+    end
+
+    test "does not rollback earlier operations" do
+      TestTimekeeper.set_time(3)
+      Server.write(1,2)
+      TestTimekeeper.set_time(5)
+      Server.write(2,2)
+      TestTimekeeper.set_time(6)      
+      Server.rollback(4)
+
+      assert 2 == Server.read(1)
+      assert nil == Server.read(2)
+    end
+
+    test "multiple rollbacks overlapping" do
+      TestTimekeeper.set_time(3)
+      Server.write(1,2)
+      TestTimekeeper.set_time(5)
+      Server.write(2,2)
+      TestTimekeeper.set_time(6)      
+      Server.rollback(4)
+      TestTimekeeper.set_time(7)
+      Server.write(1,2)
+      TestTimekeeper.set_time(8)
+      Server.write(2,2)
+      TestTimekeeper.set_time(9)      
+      Server.rollback(2)      
+
+      assert nil == Server.read(1)
+      assert nil == Server.read(2)
     end
   end
 

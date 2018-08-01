@@ -5,16 +5,16 @@ defmodule NectarDb.Oplog do
 
   @type key :: any
   @type value :: any
-  @type log :: {:write, key, value} | {:delete, key} | {:read, key}
+  @type time :: integer
+  @type log :: {:write, key, value} | {:delete, key} | {:read, key} | {:rollback, time}
 
   @spec start_link(any) :: {:ok, pid}
   def start_link(_args) do
     Agent.start_link(fn -> [] end, name: @me)
   end
 
-  @spec add_log(integer, log) :: :ok
-  def add_log(timestamp, log) do
-    IO.inspect(log)
+  @spec add_log({integer, log}) :: :ok
+  def add_log({timestamp, log}) do
     Agent.cast(@me, fn logs ->
       [{timestamp, log} | logs]
     end)

@@ -22,7 +22,7 @@ defmodule NectarDb.OpqueueWorker do
   @impl true
   def handle_info(:do_one_op,state) do
     case Opqueue.next_operation() do
-      {time,operation} -> Oplog.add_log(time,operation)
+      {time,operation} -> Oplog.add_log({time,operation})
       :no_more -> nil
     end
 

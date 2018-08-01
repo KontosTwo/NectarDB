@@ -32,8 +32,8 @@ defmodule NectarDb.Application do
       worker(Communicator, [[]]),
       worker(Store, [[]]),
       worker(Pinger, [[]]),
+      supervisor(OpqueueSupervisor,[[]]),      
       worker(Opqueue,[4]),
-      supervisor(OpqueueSupervisor,[[]]),
       supervisor(Task.Supervisor,[[name: NectarDb.TaskSupervisor]])
     ], else: []
 
