@@ -48,7 +48,6 @@ defmodule NectarDb.Communicator do
 
   @impl true
   def handle_cast({:communicate_op,operation},nodes) do
-    :rpc.
     {:noreply,nodes}
   end
 end

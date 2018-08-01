@@ -12,6 +12,7 @@ defmodule ServerTest do
     #  gotta install epmd
     start_supervised!(TestTimekeeper)
     start_supervised!({Clock,fn -> TestTimekeeper.get_time() end})
+    start_supervised!(Server)
     start_supervised!(Store)
     start_supervised!(Oplog)
     start_supervised!(Memtable)
@@ -178,14 +179,14 @@ defmodule ServerTest do
 
   describe "check health of server" do
     test "healthy server returns true" do
-      Node.start(:a@localhost, :shortnames)
-      assert Server.health_check()
+      #Node.start(:a@localhost, :shortnames)
+      assert :ok == :rpc.call(:a@localhost,Server,:health_check,[])
     end
 
     test "dead server returns false" do
       Node.start(:a@localhost, :shortnames)
-      Node.stop()
-      assert !Server.health_check()
+      assert :ok == :gen_rpc.call(:a@localhost,Node,:stop,[])
+      assert {:badrpc,:nodedown} == :gen_rpc.call(:a@localhost,Server,:health_check,[])
     end
   end
 end
