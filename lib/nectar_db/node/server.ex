@@ -21,12 +21,6 @@ defmodule NectarDb.Server do
     GenServer.start_link(__MODULE__, :no_args, name: @me)
   end
 
-  @impl true
-  def init(:no_args) do
-    {:ok, nil}
-  end
-
-
   @doc """
 
   """
@@ -48,7 +42,7 @@ defmodule NectarDb.Server do
   """
   @spec read(key) :: value
   def read(key) do
-    GenServer.call(@me, {:read,key})    
+    GenServer.call(@me, {:read,key})
   end
 
 
@@ -57,7 +51,7 @@ defmodule NectarDb.Server do
   """
   @spec rollback(time) :: :ok
   def rollback(time) when is_integer(time) do
-    GenServer.call(@me, {:rollback,time})        
+    GenServer.call(@me, {:rollback,time})
   end
 
   @doc """
@@ -71,20 +65,33 @@ defmodule NectarDb.Server do
   @doc """
 
   """
+  @spec receive_operation(oplog_entry) :: :ok
+  def receive_operation(oplog_entry) do
+    GenServer.call(@me, {:receive_operation, oplog_entry})
+  end
+
+  @doc """
+
+  """
   @spec health_check() :: boolean
   def health_check() do
     GenServer.call(@me,:health_check)
   end
 
   @impl true
+  def init(:no_args) do
+    {:ok, nil}
+  end
+
+  @impl true
   def handle_call({:write, key, value},_from, state) do
-    Oplog.add_log({Clock.get_time(),{:write, key, value}})    
+    Oplog.add_log({Clock.get_time(),{:write, key, value}})
     {:reply, :ok, state}
   end
 
   @impl true
   def handle_call({:delete, key},_from, state) do
-    Oplog.add_log({Clock.get_time(),{:delete, key}})    
+    Oplog.add_log({Clock.get_time(),{:delete, key}})
     {:reply, :ok, state}
   end
 
@@ -94,6 +101,12 @@ defmodule NectarDb.Server do
       Oplog.get_logs()
       |> List.keysort(0)
 
+    memtable_task = Task.Supervisor.async(TaskSupervisor,fn ->
+      Enum.each(sorted_oplog, fn {time, operation} ->
+        Memtable.add_log(time, operation)
+      end)
+    end)
+
     rollbacked_oplog =  Enum.reduce( sorted_oplog, [], fn entry, acc->
       case entry do
         {_time,{:rollback,to}} -> rollback_oplog(acc,to)
@@ -101,12 +114,6 @@ defmodule NectarDb.Server do
       end
     end)
     |> Enum.reverse
-
-    memtable_task = Task.Supervisor.async(TaskSupervisor,fn ->
-      Enum.each(rollbacked_oplog, fn {time, operation} ->
-        Memtable.add_log(time, operation)
-      end)
-    end)
 
     write_task = Task.Supervisor.async(TaskSupervisor,fn ->
       Enum.map rollbacked_oplog, fn {_time, operation} ->
@@ -132,7 +139,7 @@ defmodule NectarDb.Server do
 
   @impl true
   def handle_call({:rollback, to},_from, state) do
-    Oplog.add_log({Clock.get_time(),{:rollback,to}})    
+    Oplog.add_log({Clock.get_time(),{:rollback,to}})
     {:reply, :ok, state}
   end
 
@@ -141,6 +148,12 @@ defmodule NectarDb.Server do
     history = Oplog.get_logs() ++ Memtable.get_logs()
       |> List.keysort(0)
     {:reply, history,state}
+  end
+
+  @impl true
+  def handle_call({:receive_operation, oplog_entry},_from, state) do
+    Oplog.add_log(oplog_entry)
+    {:reply, :ok, state}
   end
 
   @impl true

@@ -1,9 +1,10 @@
 {application,nectar_db,
-             [{applications,[kernel,stdlib,elixir,logger,gproc,mock]},
+             [{applications,[kernel,stdlib,elixir,logger,gen_rpc,gproc,mock]},
               {description,"nectar_db"},
               {modules,['Elixir.NectarDb','Elixir.NectarDb.Application',
                         'Elixir.NectarDb.Clock',
                         'Elixir.NectarDb.Communicator',
+                        'Elixir.NectarDb.DataSupervisor',
                         'Elixir.NectarDb.ListManip',
                         'Elixir.NectarDb.Memtable','Elixir.NectarDb.Oplog',
                         'Elixir.NectarDb.Opqueue',
@@ -14,5 +15,5 @@
                         'Elixir.TestHelper.TestTimekeeper']},
               {registered,[]},
               {vsn,"0.1.0"},
-              {extra_applications,[logger]},
+              {extra_applications,[logger,gen_rpc]},
               {mod,{'Elixir.NectarDb.Application',[]}}]}.

@@ -8,7 +8,8 @@ defmodule NectarDb.Communicator do
   @type value :: any
   @type time :: integer
   @type operation :: {:write, key, value} | {:delete, key} | {:read, key} | {:rollback, time}
-  
+  @type oplog_entry :: {time,operation}
+
   @spec start_link(any) :: {:ok, pid}
   def start_link(_args) do
     GenServer.start_link(__MODULE__, :no_args,name: @me)
@@ -24,12 +25,12 @@ defmodule NectarDb.Communicator do
     GenServer.cast(@me, {:remove_node,node})
   end
 
-  @spec communicate_op(operation) :: :ok
-  def communicate_op(operation) do
-    GenServer.cast(@me,{:communicate_op,operation})
+  @spec communicate_op(oplog_entry) :: :ok
+  def communicate_op(oplog_entry) do
+    GenServer.call(@me,{:communicate_op,oplog_entry},100_000)
   end
 
-  
+
 
   @impl true
   def init(:no_args) do
@@ -38,7 +39,7 @@ defmodule NectarDb.Communicator do
 
   @impl true
   def handle_cast({:add_node, node},nodes) do
-    {:noreply, [node | nodes]}
+    {:noreply, [String.to_atom(node) | nodes]}
   end
 
   @impl true
@@ -47,7 +48,10 @@ defmodule NectarDb.Communicator do
   end
 
   @impl true
-  def handle_cast({:communicate_op,operation},nodes) do
-    {:noreply,nodes}
+  def handle_call({:communicate_op,operation},_from,nodes) do
+    Enum.each nodes, fn node ->
+      :rpc.cast(node,Server,:receive_operation,[operation])
+    end
+    {:reply,:ok,nodes}
   end
 end

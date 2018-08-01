@@ -106,7 +106,7 @@ defmodule ServerTest do
     test "rollback for 1 operation" do
       TestTimekeeper.set_time(5)
       Server.write(1,2)
-      TestTimekeeper.set_time(6)      
+      TestTimekeeper.set_time(6)
       Server.rollback(3)
       assert nil == Server.read(1)
     end
@@ -118,7 +118,7 @@ defmodule ServerTest do
       Server.write(2,2)
       TestTimekeeper.set_time(5)
       Server.write(3,2)
-      TestTimekeeper.set_time(6)      
+      TestTimekeeper.set_time(6)
       Server.rollback(1)
       assert nil == Server.read(1)
       assert nil == Server.read(2)
@@ -130,7 +130,7 @@ defmodule ServerTest do
       Server.write(1,2)
       TestTimekeeper.set_time(5)
       Server.write(2,2)
-      TestTimekeeper.set_time(6)      
+      TestTimekeeper.set_time(6)
       Server.rollback(4)
 
       assert 2 == Server.read(1)
@@ -142,17 +142,30 @@ defmodule ServerTest do
       Server.write(1,2)
       TestTimekeeper.set_time(5)
       Server.write(2,2)
-      TestTimekeeper.set_time(6)      
+      TestTimekeeper.set_time(6)
       Server.rollback(4)
       TestTimekeeper.set_time(7)
       Server.write(1,2)
       TestTimekeeper.set_time(8)
       Server.write(2,2)
-      TestTimekeeper.set_time(9)      
-      Server.rollback(2)      
+      TestTimekeeper.set_time(9)
+      Server.rollback(2)
 
       assert nil == Server.read(1)
       assert nil == Server.read(2)
+    end
+
+    test "rollback oplog entries are written to memtable" do
+      TestTimekeeper.set_time(3)
+      Server.write(1,2)
+      TestTimekeeper.set_time(5)
+      Server.write(2,2)
+      TestTimekeeper.set_time(6)
+      Server.rollback(4)
+      assert 2 == Server.read(1)
+
+      memtable = Memtable.get_logs()
+      assert {_,{:rollback,_}} = Enum.at(memtable,0)
     end
   end
 
@@ -179,14 +192,14 @@ defmodule ServerTest do
 
   describe "check health of server" do
     test "healthy server returns true" do
-      #Node.start(:a@localhost, :shortnames)
-      assert :ok == :rpc.call(:a@localhost,Server,:health_check,[])
+      Node.start(:a@localhost, :shortnames)
+      assert Server.health_check()
     end
 
     test "dead server returns false" do
       Node.start(:a@localhost, :shortnames)
-      assert :ok == :gen_rpc.call(:a@localhost,Node,:stop,[])
-      assert {:badrpc,:nodedown} == :gen_rpc.call(:a@localhost,Server,:health_check,[])
+      Node.stop()
+      refute Server.health_check()
     end
   end
 end
