@@ -18,7 +18,7 @@ defmodule NectarDb.Application do
   alias NectarDb.Clock
 
   def start(_type, _args) do
-    if (unquote(Mix.env()) != :test), do: Node.start(:b@localhost, :shortnames)
+    #if (unquote(Mix.env()) != :test), do: Node.start(:b@localhost, :shortnames)
     # List all child processes to be supervised
 
     # DO NOT USE Mix.env in RELEASE

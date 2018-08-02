@@ -15,6 +15,7 @@ defmodule NectarDb.Server do
   @type kv :: %{key => value}
   @type operation :: {:write, key, value} | {:delete, key} | {:rollback, time}
   @type oplog_entry :: {time, operation}
+  @type changelog_entry :: {:write,key,value} | {:delete,key}
 
   @spec start_link(any) :: {:ok, pid}
   def start_link(_args) do
@@ -172,8 +173,33 @@ defmodule NectarDb.Server do
     end
   end
 
-  @spec get_diff(map,map) :: {time,[{key,value}],[{key,value}]}
-  defp get_diff(before, after_) do
+  @spec get_diff(%{},%{}) :: {time,[changelog_entry]}
+  def get_diff(before, after_) do
+    time = Clock.get_time()
+    changelog = []
+    b_keys = Map.keys(before)
+    a_keys = Map.keys(after_)
+    removed =  b_keys -- a_keys
+    added = a_keys -- b_keys
+    stayed = Enum.reduce a_keys ,[], fn element,acc ->
+      if element in b_keys, do: [element | acc], else: acc
+    end
 
+    changelog = Enum.reduce removed, changelog,fn (key,changelog) ->
+      [{:write,key,before[key]} | changelog]
+    end
+
+    changelog = Enum.reduce added, changelog,fn (key,changelog) ->
+      [{:delete,key} | changelog]
+    end
+
+    changelog = Enum.reduce stayed, changelog,fn (key,changelog) ->
+      cond do
+        before[key] == after_[key] -> changelog
+        before[key] != after_[key] -> [{:write,key,before[key]} | changelog]
+      end
+    end
+
+    {time, changelog}
   end
 end
