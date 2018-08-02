@@ -79,7 +79,7 @@ defmodule ServerTest do
       assert nil == Server.read(1)
     end
 
-    test "oplog is flushed" do
+    test "oplog is flushed for read" do
       Server.write(1,2)
 
       Server.read(1)
@@ -87,12 +87,34 @@ defmodule ServerTest do
       assert [] == Oplog.get_logs()
     end
 
-    test "memtable gets written to" do
+    test "memtable gets written to for read" do
       Server.write(1,2)
 
       Server.read(1)
 
       assert [{_,{:write, 1, 2}}] = Memtable.get_logs()
+    end
+
+    test "changelog updated for read" do
+      assert false
+    end
+
+    test "delayed operation originating before read arrives after read" do
+      TestTimekeeper.set_time(1)
+      Server.write(1,1)
+
+      TestTimekeeper.set_time(5)
+      Server.write(1,2)
+
+      TestTimekeeper.set_time(10)
+      Server.read(1)
+
+      TestTimekeeper.set_time(3)
+      Server.delete(1)
+      
+
+      TestTimekeeper.set_time(20)
+      assert 2 == Server.read(1)
     end
   end
 

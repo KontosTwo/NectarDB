@@ -95,6 +95,8 @@ defmodule NectarDb.Server do
 
   @impl true
   def handle_call({:read, key},_from, state) do
+    store_before = Store.get_all()
+
     sorted_oplog =
       Oplog.get_logs()
       |> List.keysort(0)
@@ -131,6 +133,10 @@ defmodule NectarDb.Server do
     Task.await(memtable_task)
     Task.await(write_task)
 
+    store_after = Store.get_all()
+
+    diff = get_diff(store_before,store_after)
+
     value = Store.get_v(key)
     {:reply, value, state}
   end
@@ -164,5 +170,10 @@ defmodule NectarDb.Server do
     Enum.reduce oplog_entries, [], fn {time,op}, acc ->
       if time > to, do: acc, else: [{time,op} | acc]
     end
+  end
+
+  @spec get_diff(map,map) :: {time,[{key,value}],[{key,value}]}
+  defp get_diff(before, after_) do
+
   end
 end

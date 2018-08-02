@@ -8,5 +8,5 @@ function cleanup {
 trap cleanup EXIT
 
 iex --sname test1@localhost &
-mix test
+iex -S mix test
 wait

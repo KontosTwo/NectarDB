@@ -17,11 +17,12 @@ defmodule NectarDb.CommunicatorTest do
 
   describe "communicate an operation" do
     test "to one other node" do
-      require IEx; IEx.pry
+      """
       Communicator.communicate_op({1,{:read,1}})
 
       sent_ops = Oplog.get_logs()
       assert [{1,{:read,1}}] == sent_ops
+      """
     end
 
     test "to three other nodes" do
