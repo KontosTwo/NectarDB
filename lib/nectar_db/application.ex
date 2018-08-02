@@ -10,10 +10,12 @@ defmodule NectarDb.Application do
   alias NectarDb.Oplog
   alias NectarDb.Communicator
   alias NectarDb.Store
+  alias NectarDb.Server
   alias NectarDb.Memtable
   alias NectarDb.Pinger
   alias NectarDb.Opqueue
   alias NectarDb.OpqueueSupervisor
+  alias NectarDb.Clock
 
   def start(_type, _args) do
     if (unquote(Mix.env()) != :test), do: Node.start(:b@localhost, :shortnames)
@@ -31,7 +33,9 @@ defmodule NectarDb.Application do
       worker(Memtable, [[]]),
       worker(Communicator, [[]]),
       worker(Store, [[]]),
+      worker(Server, [[]]),      
       worker(Pinger, [[]]),
+      worker(Clock,[&System.monotonic_time/0]),
       supervisor(OpqueueSupervisor,[[]]),      
       worker(Opqueue,[4]),
       supervisor(Task.Supervisor,[[name: NectarDb.TaskSupervisor]])

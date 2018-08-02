@@ -24,7 +24,6 @@ defmodule ServerTest do
     test "succeeds" do
       TestTimekeeper.set_time(1)
       Server.write(1,2)
-
       assert [{1,{:write, 1, 2}}] == Oplog.get_logs()
     end
   end

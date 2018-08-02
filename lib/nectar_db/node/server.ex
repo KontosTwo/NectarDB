@@ -21,6 +21,12 @@ defmodule NectarDb.Server do
     GenServer.start_link(__MODULE__, :no_args, name: @me)
   end
 
+  @impl true
+  def init(:no_args) do
+    {:ok, nil}
+  end
+
+
   @doc """
 
   """
@@ -42,7 +48,7 @@ defmodule NectarDb.Server do
   """
   @spec read(key) :: value
   def read(key) do
-    GenServer.call(@me, {:read,key})
+    GenServer.call(@me, {:read,key})    
   end
 
 
@@ -51,7 +57,7 @@ defmodule NectarDb.Server do
   """
   @spec rollback(time) :: :ok
   def rollback(time) when is_integer(time) do
-    GenServer.call(@me, {:rollback,time})
+    GenServer.call(@me, {:rollback,time})        
   end
 
   @doc """
@@ -62,12 +68,9 @@ defmodule NectarDb.Server do
     GenServer.call(@me,:get_history)
   end
 
-  @doc """
-
-  """
-  @spec receive_operation(oplog_entry) :: :ok
-  def receive_operation(oplog_entry) do
-    GenServer.call(@me, {:receive_operation, oplog_entry})
+  @spec receive_oplog_entry(oplog_entry) :: :ok
+  def receive_oplog_entry(oplog_entry) do
+    GenServer.call(@me, {:receive_oplog_entry,oplog_entry})
   end
 
   @doc """
@@ -79,19 +82,14 @@ defmodule NectarDb.Server do
   end
 
   @impl true
-  def init(:no_args) do
-    {:ok, nil}
-  end
-
-  @impl true
   def handle_call({:write, key, value},_from, state) do
-    Oplog.add_log({Clock.get_time(),{:write, key, value}})
+    Oplog.add_log({Clock.get_time(),{:write, key, value}})    
     {:reply, :ok, state}
   end
 
   @impl true
   def handle_call({:delete, key},_from, state) do
-    Oplog.add_log({Clock.get_time(),{:delete, key}})
+    Oplog.add_log({Clock.get_time(),{:delete, key}})    
     {:reply, :ok, state}
   end
 
@@ -107,7 +105,7 @@ defmodule NectarDb.Server do
       end)
     end)
 
-    rollbacked_oplog =  Enum.reduce( sorted_oplog, [], fn entry, acc->
+    rollbacked_oplog = Enum.reduce(sorted_oplog, [], fn entry, acc->
       case entry do
         {_time,{:rollback,to}} -> rollback_oplog(acc,to)
         other_entry -> [other_entry | acc]
@@ -139,7 +137,7 @@ defmodule NectarDb.Server do
 
   @impl true
   def handle_call({:rollback, to},_from, state) do
-    Oplog.add_log({Clock.get_time(),{:rollback,to}})
+    Oplog.add_log({Clock.get_time(),{:rollback,to}})    
     {:reply, :ok, state}
   end
 
@@ -151,14 +149,14 @@ defmodule NectarDb.Server do
   end
 
   @impl true
-  def handle_call({:receive_operation, oplog_entry},_from, state) do
-    Oplog.add_log(oplog_entry)
-    {:reply, :ok, state}
+  def handle_call(:health_check,_from, state) do
+    {:reply, Node.alive?(),state}
   end
 
   @impl true
-  def handle_call(:health_check,_from, state) do
-    {:reply, Node.alive?(),state}
+  def handle_call({:receive_oplog_entry,oplog_entry},_from, state) do
+    Oplog.add_log(oplog_entry)
+    {:reply, :ok,state}
   end
 
   @spec rollback_oplog([oplog_entry],integer) :: [oplog_entry]

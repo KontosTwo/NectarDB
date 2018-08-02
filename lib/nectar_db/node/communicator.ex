@@ -50,7 +50,7 @@ defmodule NectarDb.Communicator do
   @impl true
   def handle_call({:communicate_op,operation},_from,nodes) do
     Enum.each nodes, fn node ->
-      :rpc.cast(node,Server,:receive_operation,[operation])
+      GenServer.call({Server,node},operation)
     end
     {:reply,:ok,nodes}
   end

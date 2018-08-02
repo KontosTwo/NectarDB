@@ -1,2 +1,4 @@
+exclude =
+  if Node.alive?, do: [], else: [distributed: true]
 ExUnit.configure(timeout: :infinity)
-ExUnit.start()
+ExUnit.start(exclude: exclude)
