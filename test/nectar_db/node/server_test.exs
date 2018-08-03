@@ -6,6 +6,7 @@ defmodule ServerTest do
   alias NectarDb.Memtable
   alias NectarDb.Server
   alias NectarDb.Clock
+  alias NectarDb.Changelog  
   alias TestHelper.TestTimekeeper
 
   setup do
@@ -16,6 +17,7 @@ defmodule ServerTest do
     start_supervised!(Store)
     start_supervised!(Oplog)
     start_supervised!(Memtable)
+    start_supervised!(Changelog)
     start_supervised!({Task.Supervisor,name: NectarDb.TaskSupervisor})
     :ok
   end
@@ -88,15 +90,35 @@ defmodule ServerTest do
     end
 
     test "memtable gets written to for read" do
+      TestTimekeeper.set_time(2)      
+      Server.write(1,2)
+      
+      TestTimekeeper.set_time(1)      
       Server.write(1,2)
 
       Server.read(1)
 
-      assert [{_,{:write, 1, 2}}] = Memtable.get_logs()
+      assert [{2,{:write, 1, 2}},{1,{:write, 1, 2}}] = Memtable.get_logs()
     end
 
     test "changelog updated for read" do
-      assert false
+      Store.store_kv(3,1)
+      Store.store_kv(2,1)      
+
+      TestTimekeeper.set_time(1)
+      Server.write(1,1)
+
+      TestTimekeeper.set_time(5)
+      Server.write(2,2)
+
+      TestTimekeeper.set_time(7)
+      Server.delete(3)
+
+      TestTimekeeper.set_time(10)
+      Server.read(1)
+
+      changelogs = Changelog.get_changelogs()
+      assert [{10, [{:write, 2, 1}, {:delete, 1}, {:write, 3, 1}]}] == changelogs
     end
 
     test "delayed operation originating before read arrives after read" do
@@ -208,6 +230,30 @@ defmodule ServerTest do
       Server.read(1)
       Server.write(2,2)
       assert [{_,{:write, 2, 2}},{_,{:write, 1, 2}}] = Server.get_history()
+    end
+
+    test "history is sorted" do
+      TestTimekeeper.set_time(2)
+      Server.write(1,2)
+
+      TestTimekeeper.set_time(1)
+      Server.write(1,3)
+
+      TestTimekeeper.set_time(2)
+      Server.read(1)
+
+      TestTimekeeper.set_time(4)      
+      Server.write(2,2)
+
+      TestTimekeeper.set_time(3)      
+      Server.write(2,3)
+
+      assert [
+        {1, {:write, 1, 3}},
+        {2, {:write, 1, 2}},
+        {3, {:write, 2, 3}},
+        {4, {:write, 2, 2}}
+      ] = Server.get_history()
     end
   end
 

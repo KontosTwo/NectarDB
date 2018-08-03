@@ -4,6 +4,7 @@ defmodule NectarDb.Server do
   alias NectarDb.Memtable
   alias NectarDb.TaskSupervisor
   alias NectarDb.Clock
+  alias NectarDb.Changelog
 
   use GenServer
 
@@ -102,6 +103,9 @@ defmodule NectarDb.Server do
       Oplog.get_logs()
       |> List.keysort(0)
 
+    changelogs = Changelog.get_changelogs()
+    repaired_oplog = 
+
     memtable_task = Task.Supervisor.async(TaskSupervisor,fn ->
       Enum.each(sorted_oplog, fn {time, operation} ->
         Memtable.add_log(time, operation)
@@ -131,14 +135,19 @@ defmodule NectarDb.Server do
 
     Oplog.flush()
 
-    Task.await(memtable_task)
     Task.await(write_task)
 
     store_after = Store.get_all()
-
-    diff = get_diff(store_before,store_after)
+    changelog_task = Task.Supervisor.async(TaskSupervisor,fn ->
+      diff = get_diff(store_before,store_after)
+      Changelog.add_changelog(diff)
+    end)
 
     value = Store.get_v(key)
+
+    Task.await(memtable_task)    
+    Task.await(changelog_task)
+    
     {:reply, value, state}
   end
 
@@ -174,7 +183,7 @@ defmodule NectarDb.Server do
   end
 
   @spec get_diff(%{},%{}) :: {time,[changelog_entry]}
-  def get_diff(before, after_) do
+  defp get_diff(before, after_) do
     time = Clock.get_time()
     changelog = []
     b_keys = Map.keys(before)
