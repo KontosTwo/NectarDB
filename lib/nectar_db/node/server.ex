@@ -9,6 +9,7 @@ defmodule NectarDb.Server do
   use GenServer
 
   @me __MODULE__
+  @max_time 11533521502368871000 
 
   @type time :: integer
   @type key :: any
@@ -50,7 +51,7 @@ defmodule NectarDb.Server do
   """
   @spec read(key) :: value
   def read(key) do
-    GenServer.call(@me, {:read,key})    
+    GenServer.call(@me, {:read,key}, 1000000)    
   end
 
 
@@ -125,12 +126,25 @@ defmodule NectarDb.Server do
       [] -> :none
       [{time,_operation} | _t] -> time
     end
-    if earliest_oplog_time < last_read do
-      affected_changelogs = 
-        Enum.reduce reverse_sorted_changelogs, [], fn({time,operations},acc) ->
-          if(time )
-        end
+    affected_changelogs = cond do
+      last_read == :none -> []
+      earliest_oplog_time == :none -> []
+      earliest_oplog_time < last_read ->
+        {_previous_time, changelogs} = 
+          Enum.reduce reverse_sorted_changelogs, {@max_time,[]}, fn({time,operations},{previous_time,logs}) ->
+            cond do
+              previous_time < earliest_oplog_time -> {previous_time,logs}
+              true -> {time,[{time,operations} | logs]}
+            end
+          end
+        changelogs        
+      true -> []
     end
+    memtable = Memtable.get_logs()
+    affected_memtable = Enum.filter memtable, fn {time,_operation} ->
+      time > earliest_oplog_time
+    end
+
 
     # add oplogs that are before the last read
     # get the earliest out-of-sync oplog
