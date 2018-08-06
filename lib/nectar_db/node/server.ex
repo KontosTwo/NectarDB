@@ -9,7 +9,7 @@ defmodule NectarDb.Server do
   use GenServer
 
   @me __MODULE__
-  @max_time 11533521502368871000 
+  @max_time 11533521502368871000
 
   @type time :: integer
   @type key :: any
@@ -51,7 +51,7 @@ defmodule NectarDb.Server do
   """
   @spec read(key) :: value
   def read(key) do
-    GenServer.call(@me, {:read,key}, 1000000)    
+    GenServer.call(@me, {:read,key}, 1000000)
   end
 
 
@@ -60,7 +60,7 @@ defmodule NectarDb.Server do
   """
   @spec rollback(time) :: :ok
   def rollback(time) when is_integer(time) do
-    GenServer.call(@me, {:rollback,time})        
+    GenServer.call(@me, {:rollback,time})
   end
 
   @doc """
@@ -86,13 +86,13 @@ defmodule NectarDb.Server do
 
   @impl true
   def handle_call({:write, key, value},_from, state) do
-    Oplog.add_log({Clock.get_time(),{:write, key, value}})    
+    Oplog.add_log({Clock.get_time(),{:write, key, value}})
     {:reply, :ok, state}
   end
 
   @impl true
   def handle_call({:delete, key},_from, state) do
-    Oplog.add_log({Clock.get_time(),{:delete, key}})    
+    Oplog.add_log({Clock.get_time(),{:delete, key}})
     {:reply, :ok, state}
   end
 
@@ -105,19 +105,19 @@ defmodule NectarDb.Server do
       |> List.keysort(0)
 
     # test read-repair if oplog is empty
-    reverse_sorted_oplog = 
+    reverse_sorted_oplog =
       sorted_oplog
       |> Enum.reverse()
-    
+
     #test if changelog is empty
-    sorted_changelogs = 
+    sorted_changelogs =
       Changelog.get_changelogs()
       |> Enum.sort_by(fn {time, _entry} -> time end)
-    
-    reverse_sorted_changelogs = 
+
+    reverse_sorted_changelogs =
       sorted_changelogs
       |> Enum.reverse()
-    
+
     last_read = case reverse_sorted_changelogs do
       [] -> :none
       [{time,_changelog} | _t] -> time
@@ -130,28 +130,36 @@ defmodule NectarDb.Server do
       last_read == :none -> []
       earliest_oplog_time == :none -> []
       earliest_oplog_time < last_read ->
-        {_previous_time, changelogs} = 
+        {_previous_time, changelogs} =
           Enum.reduce reverse_sorted_changelogs, {@max_time,[]}, fn({time,operations},{previous_time,logs}) ->
             cond do
               previous_time < earliest_oplog_time -> {previous_time,logs}
               true -> {time,[{time,operations} | logs]}
             end
           end
-        changelogs        
+        changelogs
       true -> []
     end
     memtable = Memtable.get_logs()
-    affected_memtable = Enum.filter memtable, fn {time,_operation} ->
-      time > earliest_oplog_time
+    affected_memtable = case affected_changelogs do
+      [{earliest_changelog_time,_operations} | _t] ->
+        Enum.filter memtable, fn {time,_operation} ->
+          time > earliest_changelog_time
+        end
+      [] -> []
     end
+    apply_changelog(affected_changelogs)
 
-
+    # !!!!
+    # Make sure to revise every changelog
+    # where an out-of-place oplog occurs
+    #!!!!!
     # add oplogs that are before the last read
     # get the earliest out-of-sync oplog
     # get all changelogs after AND DURING the earliest out of sync oplog
     # apply the changelogs
     # apply the all the oplogs
-    sorted_and_repaired_oplog = 
+    sorted_and_repaired_oplog =
 
     memtable_task = Task.Supervisor.async(TaskSupervisor,fn ->
       Enum.each(sorted_oplog, fn {time, operation} ->
@@ -192,15 +200,15 @@ defmodule NectarDb.Server do
 
     value = Store.get_v(key)
 
-    Task.await(memtable_task)    
+    Task.await(memtable_task)
     Task.await(changelog_task)
-    
+
     {:reply, value, state}
   end
 
   @impl true
   def handle_call({:rollback, to},_from, state) do
-    Oplog.add_log({Clock.get_time(),{:rollback,to}})    
+    Oplog.add_log({Clock.get_time(),{:rollback,to}})
     {:reply, :ok, state}
   end
 
@@ -257,5 +265,18 @@ defmodule NectarDb.Server do
     end
 
     {time, changelog}
+  end
+
+  @spec apply_changelog([changelog_entry]) :: :ok
+  defp apply_changelog(changelogs) do
+    Enum.each changelogs, fn operation ->
+      case operation do
+        {:write, key, value} ->
+          Store.store_kv(key, value)
+        {:delete, key} ->
+          Store.delete_k(key)
+      end
+    end
+    :ok
   end
 end
