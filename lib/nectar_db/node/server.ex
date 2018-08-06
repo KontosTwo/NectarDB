@@ -103,8 +103,41 @@ defmodule NectarDb.Server do
       Oplog.get_logs()
       |> List.keysort(0)
 
-    changelogs = Changelog.get_changelogs()
-    repaired_oplog = 
+    # test read-repair if oplog is empty
+    reverse_sorted_oplog = 
+      sorted_oplog
+      |> Enum.reverse()
+    
+    #test if changelog is empty
+    sorted_changelogs = 
+      Changelog.get_changelogs()
+      |> Enum.sort_by(fn {time, _entry} -> time end)
+    
+    reverse_sorted_changelogs = 
+      sorted_changelogs
+      |> Enum.reverse()
+    
+    last_read = case reverse_sorted_changelogs do
+      [] -> :none
+      [{time,_changelog} | _t] -> time
+    end
+    earliest_oplog_time = case sorted_oplog do
+      [] -> :none
+      [{time,_operation} | _t] -> time
+    end
+    if earliest_oplog_time < last_read do
+      affected_changelogs = 
+        Enum.reduce reverse_sorted_changelogs, [], fn({time,operations},acc) ->
+          if(time )
+        end
+    end
+
+    # add oplogs that are before the last read
+    # get the earliest out-of-sync oplog
+    # get all changelogs after AND DURING the earliest out of sync oplog
+    # apply the changelogs
+    # apply the all the oplogs
+    sorted_and_repaired_oplog = 
 
     memtable_task = Task.Supervisor.async(TaskSupervisor,fn ->
       Enum.each(sorted_oplog, fn {time, operation} ->

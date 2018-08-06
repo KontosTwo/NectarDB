@@ -25,7 +25,7 @@ defmodule NectarDb.Changelog do
     GenServer.call(@me, {:add_changelog,entry})
   end
 
-  @spec get_changelogs() :: [{time, changelog_entry}]
+  @spec get_changelogs() :: [{time, [changelog_entry]}]
   def get_changelogs() do
     GenServer.call(@me, :get_changelogs)
   end
@@ -37,10 +37,7 @@ defmodule NectarDb.Changelog do
 
   @impl true
   def handle_call(:get_changelogs,_from,entries) do
-    sorted_changelogs = Enum.sort_by(entries,fn {time,_entry} ->
-      time
-    end)
-    {:reply,sorted_changelogs,entries}
+    {:reply,entries,entries}
   end
 
   @impl true

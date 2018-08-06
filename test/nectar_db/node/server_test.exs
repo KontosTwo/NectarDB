@@ -138,6 +138,25 @@ defmodule ServerTest do
       TestTimekeeper.set_time(20)
       assert 2 == Server.read(1)
     end
+
+    test "store repaired for out-of-sync operation" do
+      Store.store_kv(3,1)
+      Store.store_kv(2,1)      
+
+      TestTimekeeper.set_time(1)
+      Server.write(1,1)
+
+      TestTimekeeper.set_time(5)
+      Server.write(2,2)
+
+      TestTimekeeper.set_time(7)
+      Server.delete(3)
+
+      TestTimekeeper.set_time(10)
+      Server.read(1)
+
+      assert false
+    end
   end
 
   describe "rollback" do
