@@ -98,6 +98,7 @@ defmodule NectarDb.Server do
 
   @impl true
   def handle_call({:read, key},_from, state) do
+    time = Clock.get_time()
     store_before = Store.get_all()
 
     sorted_oplog =
@@ -126,6 +127,7 @@ defmodule NectarDb.Server do
       [] -> :none
       [{time,_operation} | _t] -> time
     end
+
     affected_changelogs = cond do
       last_read == :none -> []
       earliest_oplog_time == :none -> []
@@ -140,26 +142,52 @@ defmodule NectarDb.Server do
         changelogs
       true -> []
     end
-    memtable = Memtable.get_logs()
-    affected_memtable = case affected_changelogs do
-      [{earliest_changelog_time,_operations} | _t] ->
-        Enum.filter memtable, fn {time,_operation} ->
-          time > earliest_changelog_time
-        end
-      [] -> []
+
+    reverse_sorted_affected_changelogs = affected_changelogs
+      |> Enum.reverse()
+
+    {earliest_affected_read,_operations} = case reverse_sorted_affected_changelogs do
+      [h | _t] -> h
+      [] -> {:none,[]}
     end
+
+
+    memtable = Memtable.get_logs()
+    all_sorted_oplogs = (sorted_oplog ++ memtable)
+      |> List.keysort(0)
+
+    affected_oplogs = case {earliest_affected_read,last_read} do
+      {:none,_} -> []
+      {_,:none} -> []
+      {earliest,last} -> Enum.filter all_sorted_oplogs, fn {time,_operation} ->
+        time > earliest and time < last
+      end
+    end
+
+    require IEx; IEx.pry
+    
+    
     apply_changelog(affected_changelogs)
 
-    # !!!!
-    # Make sure to revise every changelog
-    # where an out-of-place oplog occurs
-    #!!!!!
-    # add oplogs that are before the last read
-    # get the earliest out-of-sync oplog
-    # get all changelogs after AND DURING the earliest out of sync oplog
-    # apply the changelogs
-    # apply the all the oplogs
-    sorted_and_repaired_oplog =
+    #affected_oplogs should only be the ones before the last read
+    Enum.reduce affected_changelogs, affected_oplogs, fn ({changelog_time,operations},remaining) ->
+      before = Store.get_all()
+      current_oplogs = Enum.take_while(remaining, fn {oplog_time,_operation} -> oplog_time < changelog_time end)
+      remaining_oplogs = Enum.drop_while(remaining, fn {oplog_time,_operation} -> oplog_time < changelog_time end) 
+      apply_write(current_oplogs)
+      after_ = Store.get_all()
+      diff = get_diff(changelog_time,before,after_)
+      Changelog.add_changelog(diff)
+      remaining_oplogs
+    end
+
+
+    pruned_oplog = Enum.reduce affected_oplogs, sorted_oplog, fn affected, acc ->
+      case affected do
+        [h | _t] -> List.delete(acc,h) 
+        [] -> acc
+      end
+    end
 
     memtable_task = Task.Supervisor.async(TaskSupervisor,fn ->
       Enum.each(sorted_oplog, fn {time, operation} ->
@@ -167,7 +195,9 @@ defmodule NectarDb.Server do
       end)
     end)
 
-    rollbacked_oplog = Enum.reduce(sorted_oplog, [], fn entry, acc->
+
+    # needs to undo changesets
+    rollbacked_oplog = Enum.reduce(pruned_oplog, [], fn entry, acc->
       case entry do
         {_time,{:rollback,to}} -> rollback_oplog(acc,to)
         other_entry -> [other_entry | acc]
@@ -176,16 +206,7 @@ defmodule NectarDb.Server do
     |> Enum.reverse
 
     write_task = Task.Supervisor.async(TaskSupervisor,fn ->
-      Enum.map rollbacked_oplog, fn {_time, operation} ->
-        case operation do
-          {:write, key, value} ->
-            Store.store_kv(key, value)
-          {:delete, key} ->
-            Store.delete_k(key)
-          _ ->
-            nil
-        end
-      end
+      apply_write(rollbacked_oplog)
     end)
 
     Oplog.flush()
@@ -194,7 +215,7 @@ defmodule NectarDb.Server do
 
     store_after = Store.get_all()
     changelog_task = Task.Supervisor.async(TaskSupervisor,fn ->
-      diff = get_diff(store_before,store_after)
+      diff = get_diff(time,store_before,store_after)
       Changelog.add_changelog(diff)
     end)
 
@@ -230,6 +251,21 @@ defmodule NectarDb.Server do
     {:reply, :ok,state}
   end
 
+  @spec apply_write([oplog_entry]) :: :ok
+  defp apply_write(oplogs) do
+    Enum.map oplogs, fn {_time, operation} ->
+      case operation do
+        {:write, key, value} ->
+          Store.store_kv(key, value)
+        {:delete, key} ->
+          Store.delete_k(key)
+        _ ->
+          nil
+      end
+    end
+    :ok
+  end
+
   @spec rollback_oplog([oplog_entry],integer) :: [oplog_entry]
   defp rollback_oplog(oplog_entries,to) when is_list(oplog_entries) and is_integer(to) do
     Enum.reduce oplog_entries, [], fn {time,op}, acc ->
@@ -237,9 +273,8 @@ defmodule NectarDb.Server do
     end
   end
 
-  @spec get_diff(%{},%{}) :: {time,[changelog_entry]}
-  defp get_diff(before, after_) do
-    time = Clock.get_time()
+  @spec get_diff(integer,%{},%{}) :: {time,[changelog_entry]}
+  defp get_diff(time,before, after_) do
     changelog = []
     b_keys = Map.keys(before)
     a_keys = Map.keys(after_)
@@ -269,13 +304,16 @@ defmodule NectarDb.Server do
 
   @spec apply_changelog([changelog_entry]) :: :ok
   defp apply_changelog(changelogs) do
-    Enum.each changelogs, fn operation ->
+    Enum.each changelogs, fn {_time, operation} ->
       case operation do
         {:write, key, value} ->
           Store.store_kv(key, value)
         {:delete, key} ->
           Store.delete_k(key)
+        [delete: key] ->
+          Store.delete_k(key)          
       end
+      Changelog.rollback_changelog()
     end
     :ok
   end

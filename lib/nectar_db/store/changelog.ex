@@ -25,6 +25,11 @@ defmodule NectarDb.Changelog do
     GenServer.call(@me, {:add_changelog,entry})
   end
 
+  @spec rollback_changelog() :: :ok
+  def rollback_changelog() do
+    GenServer.call(@me, :rollback_changelog)
+  end
+
   @spec get_changelogs() :: [{time, [changelog_entry]}]
   def get_changelogs() do
     GenServer.call(@me, :get_changelogs)
@@ -41,7 +46,15 @@ defmodule NectarDb.Changelog do
   end
 
   @impl true
+  def handle_call(:rollback_changelog,_from,entries) do
+    case entries do
+      [_h | t] -> {:reply,:ok,t}
+      [] -> {:reply,:ok,entries}
+    end
+  end
+
+  @impl true
   def init(:no_args) do
-    {:ok,[]}
+    {:ok,[{0,[]}]}
   end
 end

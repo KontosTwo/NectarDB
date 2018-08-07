@@ -49,6 +49,10 @@ defmodule ServerTest do
       assert 2 == Server.read(1)
     end
 
+    test "returns nothing if nothing was written" do
+      assert nil == Server.read(1)
+    end
+
     test "returns correct value with consecutive writes" do
       TestTimekeeper.set_time(1)
 

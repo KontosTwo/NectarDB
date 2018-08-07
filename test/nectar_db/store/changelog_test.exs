@@ -23,4 +23,17 @@ defmodule ChangelogTest do
       ] == Changelog.get_changelogs()
     end
   end
+
+  describe "rollback changelog" do
+    test "rollback one changelog" do
+      Changelog.add_changelog({1,[{:write,1,2}]})
+      Changelog.rollback_changelog()
+      assert [] == Changelog.get_changelogs()
+    end
+
+    test "rollback on empty changelog" do
+      Changelog.rollback_changelog()
+      assert [] == Changelog.get_changelogs()
+    end
+  end
 end
