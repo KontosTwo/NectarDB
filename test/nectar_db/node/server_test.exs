@@ -5,14 +5,10 @@ defmodule ServerTest do
   alias NectarDb.Oplog
   alias NectarDb.Memtable
   alias NectarDb.Server
-  alias NectarDb.Clock
   alias NectarDb.Changelog  
-  alias TestHelper.TestTimekeeper
 
   setup do
     #  gotta install epmd
-    start_supervised!(TestTimekeeper)
-    start_supervised!({Clock,fn -> TestTimekeeper.get_time() end})
     start_supervised!(Server)
     start_supervised!(Store)
     start_supervised!(Oplog)
@@ -24,83 +20,64 @@ defmodule ServerTest do
 
   describe "write a key value pair" do
     test "succeeds" do
-      TestTimekeeper.set_time(1)
-      Server.write(1,2)
+      Server.write(1,1,2)
+
       assert [{1,{:write, 1, 2}}] == Oplog.get_logs()
     end
   end
 
   describe "delete a key value pair" do
     test "succeeds" do
-      TestTimekeeper.set_time(1)
+      Server.write(1,1,2)
+      Server.delete(2,1)
 
-      Server.write(1,2)
-      TestTimekeeper.set_time(2)
-
-      Server.delete(1)
       assert [{2,{:delete, 1}},{1,{:write, 1, 2}}] = Oplog.get_logs()
     end
   end
 
   describe "reads a key" do
     test "returns correct value" do
-      Server.write(1,2)
+      Server.write(1,1,2)
 
-      assert 2 == Server.read(1)
+      assert 2 == Server.read(1,1)
     end
 
     test "returns nothing if nothing was written" do
-      assert nil == Server.read(1)
+      assert nil == Server.read(1,1)
     end
 
     test "returns correct value with consecutive writes" do
-      TestTimekeeper.set_time(1)
+      Server.write(1,1,2)
+      Server.write(2,1,3)
 
-      Server.write(1,2)
-      TestTimekeeper.set_time(2)
-
-      Server.write(1,3)
-
-      assert 3 == Server.read(1)
+      assert 3 == Server.read(3,1)
     end
 
     test "returns correct value with write followed by delete" do
-      TestTimekeeper.set_time(1)
+      Server.write(1, 1,2)
+      Server.delete(2, 1)
 
-      Server.write(1,2)
-      TestTimekeeper.set_time(2)
-
-      Server.delete(1)
-
-      assert nil == Server.read(1)
+      assert nil == Server.read(3,1)
     end
 
     test "returns correct value with operations out of order" do
-      TestTimekeeper.set_time(2)
+      Server.delete(2, 1)
+      Server.write(1,1,2)
 
-      Server.delete(1)
-      TestTimekeeper.set_time(1)
-
-      Server.write(1,2)
-      assert nil == Server.read(1)
+      assert nil == Server.read(3,1)
     end
 
     test "oplog is flushed for read" do
-      Server.write(1,2)
-
-      Server.read(1)
+      Server.write(1,1,2)
+      Server.read(2,1)
 
       assert [] == Oplog.get_logs()
     end
 
     test "memtable gets written to for read" do
-      TestTimekeeper.set_time(2)      
-      Server.write(1,2)
-      
-      TestTimekeeper.set_time(1)      
-      Server.write(1,2)
-
-      Server.read(1)
+      Server.write(2,1,2)
+      Server.write(1,1,2)
+      Server.read(3,1)
 
       assert [{2,{:write, 1, 2}},{1,{:write, 1, 2}}] = Memtable.get_logs()
     end
@@ -108,168 +85,92 @@ defmodule ServerTest do
     test "changelog updated for read" do
       Store.store_kv(3,1)
       Store.store_kv(2,1)      
-
-      TestTimekeeper.set_time(1)
-      Server.write(1,1)
-
-      TestTimekeeper.set_time(5)
-      Server.write(2,2)
-
-      TestTimekeeper.set_time(7)
-      Server.delete(3)
-
-      TestTimekeeper.set_time(10)
-      Server.read(1)
+      Server.write(1,1,1)
+      Server.write(5,2,2)
+      Server.delete(7,3)
+      Server.read(10,1)
 
       changelogs = Changelog.get_changelogs()
-      assert [{10, [{:write, 2, 1}, {:delete, 1}, {:write, 3, 1}]}] == changelogs
+      assert [{10, [{:write, 2, 1}, {:delete, 1}, {:write, 3, 1}]}, {0, []}] == changelogs
     end
 
     test "delayed operation originating before read arrives after read" do
-      TestTimekeeper.set_time(1)
-      Server.write(1,1)
-
-      TestTimekeeper.set_time(5)
-      Server.write(1,2)
-
-      TestTimekeeper.set_time(10)
-      Server.read(1)
-
-      TestTimekeeper.set_time(3)
-      Server.delete(1)
+      Server.write(1,1,1)
+      Server.write(5,1,2)
+      Server.read(10,1)
+      Server.delete(3,1)
       
-
-      TestTimekeeper.set_time(20)
-      assert 2 == Server.read(1)
+      assert 2 == Server.read(20,1)
+      assert Store.get_v(1) == 2    
+      assert Changelog.get_changelogs == [{20, []}, {10, [delete: 1]}, {0, []}] 
+      assert Oplog.get_logs == []      
+      assert Memtable.get_logs() == [{3, {:delete, 1}}, {5, {:write, 1, 2}}, {1, {:write, 1, 1}}]
     end
 
-    test "store repaired for out-of-sync operation" do
-      Store.store_kv(3,1)
-      Store.store_kv(2,1)      
+    test "delayed operation is the very first operation" do
+      Server.write(5,1,2)
+      Server.read(10,1)
+      Server.delete(3,1)
 
-      TestTimekeeper.set_time(1)
-      Server.write(1,1)
-
-      TestTimekeeper.set_time(5)
-      Server.write(2,2)
-
-      TestTimekeeper.set_time(7)
-      Server.delete(3)
-
-      TestTimekeeper.set_time(10)
-      Server.read(1)
-
-      assert false
-    end
-  end
-
-  describe "rollback" do
-    test "no rollback on empty oplog and memtable" do
-      TestTimekeeper.set_time(1)
-      Server.rollback(1)
+      assert 2 == Server.read(20,1)
+      assert Store.get_v(1) == 2    
+      assert Changelog.get_changelogs == [{20, []}, {10, [delete: 1]}, {0, []}] 
+      assert Oplog.get_logs == []      
+      assert Memtable.get_logs() == [{3, {:delete, 1}}, {5, {:write, 1, 2}}]
     end
 
-    test "rollback for 1 operation" do
-      TestTimekeeper.set_time(5)
-      Server.write(1,2)
-      TestTimekeeper.set_time(6)
-      Server.rollback(3)
-      assert nil == Server.read(1)
+    test "delayed operation is the only operation" do
+      Server.read(10,1)
+      Server.write(5,1,2)
+
+      assert 2 == Server.read(20,1)
+      assert Store.get_v(1) == 2    
+      assert Changelog.get_changelogs == [{20, []}, {10, [delete: 1]}, {0, []}]
+      assert Oplog.get_logs == []      
+      assert Memtable.get_logs() == [{5, {:write, 1, 2}}]
     end
 
-    test "rollback for 3 operation" do
-      TestTimekeeper.set_time(3)
-      Server.write(1,2)
-      TestTimekeeper.set_time(4)
-      Server.write(2,2)
-      TestTimekeeper.set_time(5)
-      Server.write(3,2)
-      TestTimekeeper.set_time(6)
-      Server.rollback(1)
-      assert nil == Server.read(1)
-      assert nil == Server.read(2)
-      assert nil == Server.read(3)
-    end
-
-    test "does not rollback earlier operations" do
-      TestTimekeeper.set_time(3)
-      Server.write(1,2)
-      TestTimekeeper.set_time(5)
-      Server.write(2,2)
-      TestTimekeeper.set_time(6)
-      Server.rollback(4)
-
-      assert 2 == Server.read(1)
-      assert nil == Server.read(2)
-    end
-
-    test "multiple rollbacks overlapping" do
-      TestTimekeeper.set_time(3)
-      Server.write(1,2)
-      TestTimekeeper.set_time(5)
-      Server.write(2,2)
-      TestTimekeeper.set_time(6)
-      Server.rollback(4)
-      TestTimekeeper.set_time(7)
-      Server.write(1,2)
-      TestTimekeeper.set_time(8)
-      Server.write(2,2)
-      TestTimekeeper.set_time(9)
-      Server.rollback(2)
-
-      assert nil == Server.read(1)
-      assert nil == Server.read(2)
-    end
-
-    test "rollback oplog entries are written to memtable" do
-      TestTimekeeper.set_time(3)
-      Server.write(1,2)
-      TestTimekeeper.set_time(5)
-      Server.write(2,2)
-      TestTimekeeper.set_time(6)
-      Server.rollback(4)
-      assert 2 == Server.read(1)
-
-      memtable = Memtable.get_logs()
-      assert {_,{:rollback,_}} = Enum.at(memtable,0)
+    test "two consecutive reads" do
+      Server.read(10,1)
+      Server.read(10,1)
+      assert nil == Server.read(10,1)
+      assert Store.get_v(1) == nil    
+      assert Changelog.get_changelogs == [{10, []}, {10, []}, {10, []}, {0, []}]
+      assert Oplog.get_logs == []      
+      assert Memtable.get_logs() == []
     end
   end
 
   describe "gets history" do
     test "correct history for unflushed oplog" do
-      Server.write(1,2)
+      Server.write(1,1,2)
 
-      assert [{_,{:write, 1, 2}}] = Server.get_history()
+      assert [{1,{:write, 1, 2}}] = Server.get_history()
     end
 
     test "correct history for flushed oplog and written memtable" do
-      Server.write(1,2)
-      Server.read(1)
-      assert [{_,{:write, 1, 2}}] = Server.get_history()
+      Server.write(1,1,2)
+      Server.read(2,1)
+      assert [{1,{:write, 1, 2}}] = Server.get_history()
     end
 
     test "correct history for flushed and repopulated oplog and written memtable" do
-      Server.write(1,2)
-      Server.read(1)
-      Server.write(2,2)
-      assert [{_,{:write, 2, 2}},{_,{:write, 1, 2}}] = Server.get_history()
+      Server.write(1,1,2)
+      Server.read(2,1)
+      Server.write(3,2,2)
+      assert [{1,{:write, 1, 2}},{3,{:write, 2, 2}}] = Server.get_history()
     end
 
     test "history is sorted" do
-      TestTimekeeper.set_time(2)
-      Server.write(1,2)
+      Server.write(2,1,2)
 
-      TestTimekeeper.set_time(1)
-      Server.write(1,3)
+      Server.write(1,1,3)
 
-      TestTimekeeper.set_time(2)
-      Server.read(1)
+      Server.read(2,1)
 
-      TestTimekeeper.set_time(4)      
-      Server.write(2,2)
+      Server.write(4,2,2)
 
-      TestTimekeeper.set_time(3)      
-      Server.write(2,3)
+      Server.write(3,2,3)
 
       assert [
         {1, {:write, 1, 3}},
