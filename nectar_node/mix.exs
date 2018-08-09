@@ -1,4 +1,4 @@
-defmodule NectarDb.MixProject do
+defmodule NectarNode.MixProject do
   use Mix.Project
 
   def project do
@@ -16,7 +16,7 @@ defmodule NectarDb.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {NectarDb.Application, []}
+      mod: {NectarNode.Application, []}
     ]
   end
 
