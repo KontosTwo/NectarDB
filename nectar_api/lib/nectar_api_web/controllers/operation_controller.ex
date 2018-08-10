@@ -1,9 +1,9 @@
 defmodule NectarAPIWeb.OperationController do
   use NectarAPIWeb, :controller
 
-  def write(conn, %{"operations" => operations})do
+  def write(conn, %{"writes" => writes})do
     conn
-    |> json(operations)
+    |> json(writes)
   end
 
   def read(conn, %{"reads" => reads}) do
