@@ -7,8 +7,7 @@ use Mix.Config
 
 # General application configuration
 config :nectar_api,
-  namespace: NectarAPI,
-  ecto_repos: [NectarAPI.Repo]
+  namespace: NectarAPI
 
 # Configures the endpoint
 config :nectar_api, NectarAPIWeb.Endpoint,
@@ -22,6 +21,8 @@ config :nectar_api, NectarAPIWeb.Endpoint,
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:user_id]
+
+config :nectar_api, :ecto_repos, []
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

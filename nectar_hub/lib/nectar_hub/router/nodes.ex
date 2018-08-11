@@ -13,14 +13,15 @@ defmodule NectarHub.Router.Nodes do
     Agent.start_link(fn -> Queue.new() end, name: @me)
   end
 
+  @spec add_node(node_name) :: :ok
   def add_node(node) do
     Agent.update(@me, fn nodes -> Queue.insert(nodes, String.to_atom(node)) end)
   end
 
   def next_node() do
     Agent.get_and_update(@me, fn nodes ->
-      next_node = Queue.pop(nodes)
-      new_queue = Queue.insert_last(nodes,next_node)
+      {next_node, popped_queue} = Queue.pop(nodes)
+      new_queue = Queue.insert(popped_queue,next_node)      
       {next_node,new_queue}
     end)
   end

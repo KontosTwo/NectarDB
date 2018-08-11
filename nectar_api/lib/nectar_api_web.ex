@@ -22,7 +22,6 @@ defmodule NectarAPIWeb do
       use Phoenix.Controller, namespace: NectarAPIWeb
       import Plug.Conn
       import NectarAPIWeb.Router.Helpers
-      import NectarAPIWeb.Gettext
     end
   end
 

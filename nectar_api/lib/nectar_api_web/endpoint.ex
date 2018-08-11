@@ -1,7 +1,6 @@
 defmodule NectarAPIWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :nectar_api
 
-  socket "/socket", NectarAPIWeb.UserSocket
 
   # Serve at "/" the static files from "priv/static" directory.
   #
@@ -14,7 +13,6 @@ defmodule NectarAPIWeb.Endpoint do
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
-    socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
   end
