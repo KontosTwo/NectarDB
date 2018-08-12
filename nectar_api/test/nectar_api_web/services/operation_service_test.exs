@@ -2,8 +2,8 @@ defmodule NectarAPIWeb.OperationServiceTest do
   use ExUnit.Case, async: false
 
   alias NectarAPIWeb.OperationService
-  alias NectarAPI.Clock
-  alias NectarAPI.Queue
+  alias NectarAPI.Time.Clock
+  alias NectarAPI.Util.Queue
   
   setup do
     start_supervised!(Clock)

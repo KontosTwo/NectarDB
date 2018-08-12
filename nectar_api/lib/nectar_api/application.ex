@@ -10,7 +10,7 @@ defmodule NectarAPI.Application do
       # Starts a worker by calling: NectarNode.Worker.start_link(arg)
       # {NectarNode.Worker, arg},
       supervisor(NectarAPIWeb.Endpoint, []),
-      
+      {Task.Supervisor,name: NectarAPI.CommunicationSupervisor}
     ], else: []
     # Define workers and child supervisors to be supervised
     

@@ -62,11 +62,6 @@ defmodule NectarNode.Server do
     GenServer.call(@me,:get_history)
   end
 
-  @spec receive_oplog_entry(oplog_entry) :: :ok
-  def receive_oplog_entry(oplog_entry) do
-    GenServer.call(@me, {:receive_oplog_entry,oplog_entry})
-  end
-
   @doc """
 
   """

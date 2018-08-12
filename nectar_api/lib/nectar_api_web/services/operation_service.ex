@@ -1,7 +1,7 @@
 defmodule NectarAPIWeb.OperationService do
 
-  alias NectarAPI.Clock
-  alias NectarAPI.Queue
+  alias NectarAPI.Time.Clock
+  alias NectarAPI.Util.Queue
 
   defp write(%{"type" => "write","key" => key, "value" => value}) do
     {:write, key, value}
