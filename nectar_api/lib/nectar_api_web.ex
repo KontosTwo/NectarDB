@@ -37,8 +37,8 @@ defmodule NectarAPIWeb do
       use Phoenix.HTML
 
       import NectarAPIWeb.Router.Helpers
-      import NectarAPIWeb.ErrorHelpers
-      import NectarAPIWeb.Gettext
+      #import NectarAPIWeb.ErrorHelpers
+      #import NectarAPIWeb.Gettext
     end
   end
 

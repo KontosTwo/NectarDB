@@ -5,6 +5,7 @@ defmodule NectarAPI.Application do
   # for more information on OTP Applications
   def start(_type, _args) do
     import Supervisor.Spec
+    Node.start(:nectar_api)
 
     children = if (unquote(Mix.env()) != :test), do: [
       # Starts a worker by calling: NectarNode.Worker.start_link(arg)
