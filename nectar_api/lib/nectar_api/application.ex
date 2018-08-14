@@ -1,17 +1,21 @@
 defmodule NectarAPI.Application do
   use Application
 
+  alias NectarAPI.Router.Nodes
+  alias NectarAPI.Time.Clock
+
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   def start(_type, _args) do
     import Supervisor.Spec
-    Node.start(:nectar_api)
+    #Node.start(:nectar_api)
 
     children = if (unquote(Mix.env()) != :test), do: [
       # Starts a worker by calling: NectarNode.Worker.start_link(arg)
       # {NectarNode.Worker, arg},
       supervisor(NectarAPIWeb.Endpoint, []),
-      {Task.Supervisor,name: NectarAPI.CommunicationSupervisor}
+      worker(Nodes,[[]]),
+      worker(Clock,[[]])
     ], else: []
     # Define workers and child supervisors to be supervised
     

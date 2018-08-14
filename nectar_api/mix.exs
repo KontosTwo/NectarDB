@@ -19,7 +19,7 @@ defmodule NectarAPI.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      applications: [:gen_retry],
+      applications: [:gen_retry,:cowboy],
       mod: {NectarAPI.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]

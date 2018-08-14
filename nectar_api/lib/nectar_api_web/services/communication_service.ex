@@ -76,7 +76,7 @@ defmodule NectarAPIWeb.CommunicationService do
       fn -> 
         value = RPC.call(Nodes.next_node(), NectarNode.Server,:read,[time, key]) 
         case value do
-          {:badrpc, _reason} -> raise ReadNodesUnresponsive
+          {:badrpc, _reason} -> :nodes_unresponsive
           value -> value
         end
       end,

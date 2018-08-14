@@ -11,7 +11,7 @@ defmodule NectarAPIWeb.OperationService do
     {:delete, key}
   end
 
-  defp read(%{"key" => key}) do
+  defp read(%{"type" => "read","key" => key}) do
     {:read, key}
   end
 

@@ -15,7 +15,14 @@ defmodule NectarAPI.Router.Nodes do
 
   @spec add_node(node_name) :: :ok
   def add_node(node) do
-    Agent.update(@me, fn nodes -> Queue.insert(nodes, String.to_atom(node)) end)
+    Agent.update(@me, fn nodes -> 
+      atomic_node = String.to_atom(node)
+      if(!Queue.member?(nodes,atomic_node)) do
+        Queue.insert(nodes, atomic_node)
+      else
+        nodes
+      end
+    end)
   end
 
   def next_node() do

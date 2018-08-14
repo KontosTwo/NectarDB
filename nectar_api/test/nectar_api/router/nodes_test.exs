@@ -14,6 +14,12 @@ defmodule NectarAPI.Router.NodesTest do
       assert [:a@com] == Nodes.all_nodes()
     end
 
+    test "won't save the same node twice" do
+      Nodes.add_node("a@com")
+      Nodes.add_node("a@com")      
+      assert [:a@com] == Nodes.all_nodes()
+    end
+
     test "saves multiple nodes" do
       Nodes.add_node("a@com")
       Nodes.add_node("b@com")
