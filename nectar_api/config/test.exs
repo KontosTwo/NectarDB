@@ -9,3 +9,11 @@ config :nectar_api, NectarAPIWeb.Endpoint,
 # Print only warnings and errors during test
 config :logger, level: :warn
 
+# Configure your database
+config :nectar_api, NectarAPI.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  username: "postgres",
+  password: "postgres",
+  database: "nectar_api_test",
+  hostname: "localhost",
+  pool: Ecto.Adapters.SQL.Sandbox

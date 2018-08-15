@@ -19,7 +19,6 @@ defmodule NectarAPI.Mixfile do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      applications: [:gen_retry,:cowboy],
       mod: {NectarAPI.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
@@ -42,10 +41,9 @@ defmodule NectarAPI.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:gen_stage, "~> 0.14"},
       {:mock, "~> 0.3.0", only: :test},
       {:gen_retry, "~> 1.0.2"},
-      {:distillery, "~> 2.0", warn_missing: false},      
+      {:distillery, "~> 2.0", warn_missing: false},  
     ]
   end
 

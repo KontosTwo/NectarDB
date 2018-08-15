@@ -7,14 +7,14 @@ use Mix.Config
 
 # General application configuration
 config :nectar_api,
-  namespace: NectarAPI
+  namespace: NectarAPI,
+  ecto_repos: []
 
 # Configures the endpoint
 config :nectar_api, NectarAPIWeb.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "jvGA74JWlWgYdlSG3JGyCvoDSnmfAQICn4HNb3wJSHO/Oc/OCnWxEaZK18JfJOvc",
+  secret_key_base: "w6ypHB+ZGk6mVDs8IK5ZS8bd0BVuzGhzlVP/ba20pkZacqPjKW8evrijWqn/A//r",
   render_errors: [view: NectarAPIWeb.ErrorView, accepts: ~w(html json)],
-  server: true,
   pubsub: [name: NectarAPI.PubSub,
            adapter: Phoenix.PubSub.PG2]
 
@@ -22,10 +22,6 @@ config :nectar_api, NectarAPIWeb.Endpoint,
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:user_id]
-
-config :nectar_api, :ecto_repos, []
-
-
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

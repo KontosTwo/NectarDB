@@ -14,7 +14,8 @@ defmodule NectarAPIWeb.Router do
   end
 
   scope "/", NectarAPIWeb do
-    pipe_through :api
+    pipe_through :api # Use the default browser stack
+
     post "/write", OperationController, :write
     post "/read", OperationController, :read
   end

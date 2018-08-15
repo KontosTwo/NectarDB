@@ -10,9 +10,7 @@ defmodule NectarNode.Application do
   alias NectarNode.Server
   alias NectarNode.DataSupervisor
 
-  def start(_type, _args) do
-    # List all child processes to be supervised
-    
+  def start(_type, _args) do    
     if (unquote(Mix.env()) != :test) do
       args = Enum.map(:init.get_plain_arguments(), &List.to_string/1)
       third = Enum.at(args,3)
@@ -21,12 +19,11 @@ defmodule NectarNode.Application do
       |> String.to_atom()
       api_node = Enum.at(split,2)
       |> String.to_atom()
-  
+      
       Node.stop()
       Node.start(node, :longnames)
       Node.set_cookie(:NectarDB)
-      
-  
+        
       successful = Node.connect(api_node)
   
       if(successful) do
@@ -36,6 +33,7 @@ defmodule NectarNode.Application do
           worker(Server, [[]]),    
           supervisor(Task.Supervisor,[[name: NectarNode.TaskSupervisor]])
         ]
+        IO.inspect "NectarNode started at node " <> Atom.to_string(Node.self())
     
         opts = [strategy: :one_for_one, name: NectarNode.Supervisor]
         Supervisor.start_link(children, opts)

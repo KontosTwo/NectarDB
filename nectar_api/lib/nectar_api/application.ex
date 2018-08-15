@@ -10,6 +10,7 @@ defmodule NectarAPI.Application do
     import Supervisor.Spec
     Node.start(:nectar_api)
     Node.set_cookie(:NectarDB)
+    
     IO.inspect("NectarAPI started at node " <> Atom.to_string(Node.self()))
     children = if (unquote(Mix.env()) != :test), do: [
       # Starts a worker by calling: NectarNode.Worker.start_link(arg)
