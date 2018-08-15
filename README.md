@@ -1,4 +1,4 @@
-### NectarDB
+# NectarDB
 ## Description
 An in-memory distributed key-value store implemented in Elixir prioritizing availability and partition-tolerance over consistency
 Not meant to be a serious implementation of a full-fledged database, but instead a learning experience to get practice with Agents, Tasks, Genservers,
@@ -12,17 +12,17 @@ Note: NectarDB only works on OSX (Macs)
 3. Execute `chmod +x nectar_node.sh` and `chmod +x nectar_api.sh`
 
 ## Usage
-# Starting the API
+### Starting the API
 1. Open a terminal session and navigate to NectarDB/bin
 2. Execute `./nectar_api.sh` and wait for a message in the format of "NectarAPI started at node <name of the api node>"
 3. You may have to allow beam.smp and other apps to allow connections
   
-# Starting a node
+### Starting a node
 1. Open a terminal session and navigate to NectarDB/bin
 2. Execute `./nectar_node.sh <unique name> <name of the api node>` and wait for a message in the format of "NectarNode started at node <name of the node>"
 3. You may have to allow beam.smp and other apps to allow connections
 
-# Querying through REST API
+### Querying through REST API
 1. Write data with the following POST request to localhost:4000/write, Content-Type set to application/json. You may have as many writes and deletes as you want. 
 ```json
 {
@@ -78,12 +78,12 @@ Depending on if an individual read succeeds, it will appear in either the "succe
 }
 ```  
 
-# Fault Tolerance
+## Fault Tolerance
 Kill, restart, and add nodes as you please.
 
-# Future features
+## Future features
  - Nodes can be added even after data has begun flowing in
  - API nodes can be restarted after crashing
  
-# Closing words
+## Closing words
 If there are any problems running NectarDB, please shoot me an email
