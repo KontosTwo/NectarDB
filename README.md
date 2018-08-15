@@ -71,7 +71,7 @@ Depending on if an individual read succeeds, it will appear in either the "succe
   ],
   "failures": [
     {
-      "key" 2,
+      "key": 2,
       "result": "nodes_unresponsive"
     }
   ]
