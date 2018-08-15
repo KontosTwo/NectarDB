@@ -1,0 +1,23 @@
+#### Generated - edit/create /Users/user/Documents/Programming/NectarDb/bin/nectar_api/vm.args instead.
+## Name of the node
+-name nectar_api@127.0.0.1
+
+## Cookie for distributed erlang
+-setcookie IIB8R9lYKkNqA!@^4oq/U7;A|CVJel*l:0;.pveQ7{3OI;&~IP[aR_/>$?6l[]H_
+
+## Heartbeat management; auto-restarts VM if it dies or becomes unresponsive
+## (Disabled by default..use with caution!)
+##-heart
+
+## Enable kernel poll and a few async threads
+##+K true
+##+A 5
+
+## Increase number of concurrent ports/sockets
+##-env ERL_MAX_PORTS 4096
+
+## Tweak GC to run more often
+##-env ERL_FULLSWEEP_AFTER 10
+
+# Enable SMP automatically based on availability
+-smp auto

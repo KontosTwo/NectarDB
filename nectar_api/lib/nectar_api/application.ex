@@ -3,6 +3,8 @@ defmodule NectarAPI.Application do
 
   alias NectarAPI.Router.Nodes
   alias NectarAPI.Time.Clock
+  alias GenRetry
+  
 
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications

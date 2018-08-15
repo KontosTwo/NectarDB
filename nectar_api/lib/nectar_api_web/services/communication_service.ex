@@ -4,8 +4,10 @@ defmodule NectarAPIWeb.CommunicationService do
   alias NectarAPI.Util.Queue
   alias NectarAPI.Router.Nodes
   alias NectarAPI.Exceptions.NoNodes
-  
+  alias NectarAPI.Exceptions.NodesUnresponsive
   alias GenRetry
+
+  use Retry
 
   @retries_per_write :infinity
   @delay_per_write 100
@@ -71,18 +73,36 @@ defmodule NectarAPIWeb.CommunicationService do
       raise NoNodes
     end
 
-    task = GenRetry.Task.async(
-      fn -> 
-        value = RPC.call(Nodes.next_node(), NectarNode.Server,:read,[time, key]) 
-        case value do
-          {:badrpc, _reason} -> :nodes_unresponsive
-          value -> value
-        end
-      end,
-      retries: @retries_per_read * num_of_nodes,
-      delay: @delay_per_read / num_of_nodes,
-      exp_base: 1
-    )
-    Task.await(task)
+    # task = GenRetry.Task.async(
+    #   fn -> 
+    #     value = RPC.call(Nodes.next_node(), NectarNode.Server,:read,[time, key]) 
+    #     case value do
+    #       {:badrpc, _reason} -> raise NodesUnresponsive
+    #       value -> value
+    #     end
+    #   end,
+    #   retries: @retries_per_read * num_of_nodes,
+    #   delay: @delay_per_read / num_of_nodes,
+    #   exp_base: 1
+    # )
+    # Task.await(task)
+
+    rpc_result = retry with: lin_backoff(10, 1) |> cap(1_000) |> Stream.take(10) do
+      result = RPC.call(Nodes.next_node(), NectarNode.Server,:read,[time, key])
+      case result do
+        {:badrpc, _reason} -> :error
+        valid_result -> valid_result
+      end
+    after
+      result -> result
+    else
+      error -> error
+    end
+
+    if(rpc_result == :error) do
+      raise NodesUnresponsive
+    else
+      rpc_result
+    end
   end
 end

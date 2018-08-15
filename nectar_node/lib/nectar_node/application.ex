@@ -12,16 +12,14 @@ defmodule NectarNode.Application do
 
   def start(_type, _args) do    
     if (unquote(Mix.env()) != :test) do
-      args = Enum.map(:init.get_plain_arguments(), &List.to_string/1)
-      third = Enum.at(args,3)
-      split = String.split(third)
-      node = Enum.at(split,1)
-      |> String.to_atom()
-      api_node = Enum.at(split,2)
+      # args = Enum.map(:init.get_plain_arguments(), &List.to_string/1)
+      # third = Enum.at(args,3)
+      # split = String.split(third,trim: true)
+      # api_node = Enum.at(split,1)
+      # |> String.to_atom()
+      api_node = System.get_env("APINODENAME")
       |> String.to_atom()
       
-      Node.stop()
-      Node.start(node, :longnames)
       Node.set_cookie(:NectarDB)
         
       successful = Node.connect(api_node)

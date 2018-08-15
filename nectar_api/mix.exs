@@ -20,7 +20,7 @@ defmodule NectarAPI.Mixfile do
   def application do
     [
       mod: {NectarAPI.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :retry]
     ]
   end
 
@@ -43,6 +43,7 @@ defmodule NectarAPI.Mixfile do
       {:cowboy, "~> 1.0"},
       {:mock, "~> 0.3.0", only: :test},
       {:gen_retry, "~> 1.0.2"},
+      {:retry, "~> 0.10"},
       {:distillery, "~> 2.0", warn_missing: false},  
     ]
   end

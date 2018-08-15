@@ -13,6 +13,7 @@ defmodule NectarAPIWeb.OperationControllerTest do
     start_supervised!(Clock)
     start_supervised!(Endpoint)
     start_supervised!(Nodes)
+    start_supervised!({Task.Supervisor,[name: Something]})
     :ok
   end
 
@@ -460,5 +461,28 @@ defmodule NectarAPIWeb.OperationControllerTest do
         assert body["message"] != nil        
       end
     end
+  end
+
+  test "lol" do
+    alias GenRetry
+    Process.flag(:trap_exit, true)
+    
+    task = GenRetry.Task.async(fn -> 
+      IO.inspect "trying"
+      raise "wut" 
+    end , retries: 0)
+    Process.monitor task.pid
+
+    receive do
+      {:EXIT, pid, :normal} ->
+        IO.inspect "Normal exit from #{inspect pid}"
+      {:EXIT, pid, msg} ->
+        IO.inspect ":EXIT received from #{inspect pid}"
+        IO.inspect msg
+    end
+    Task.await(task)
+
+    
+    
   end
 end

@@ -1,6 +1,7 @@
 #### Generated - edit/create /Users/user/Documents/Programming/NectarDb/nectar_node/_build/prod/rel/nectar_node/vm.args instead.
 ## Name of the node
--name nectar_node@127.0.0.1
+##-name nectar_node@127.0.0.1
+-name two@127.0.0.1
 
 ## Cookie for distributed erlang
 -setcookie a[qwn!e(fUo=9qTc/jB=g13P).8l=|Jfw~gkRy}&9jed9TX6qpf`IdeHGo6c~,],

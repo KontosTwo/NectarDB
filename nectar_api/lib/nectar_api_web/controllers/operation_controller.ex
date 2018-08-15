@@ -5,7 +5,7 @@ defmodule NectarAPIWeb.OperationController do
   alias NectarAPIWeb.OperationService
   alias NectarAPI.Util.Queue
 
-  alias NectarAPI.Exceptions.ReadNodesUnresponsive
+  alias NectarAPI.Exceptions.NodesUnresponsive
   alias NectarAPI.Exceptions.NoNodes
   
   def write(conn, %{"writes" => writes}) when is_list(writes) do
@@ -60,7 +60,11 @@ defmodule NectarAPIWeb.OperationController do
             {key,CommunicationService.read({time,{:read, key}})}
           rescue
             NoNodes -> {key,:no_nodes}
-            ReadNodesUnresponsive -> {key,:nodes_unresponsive}
+            NodesUnresponsive -> {key,:nodes_unresponsive}
+            _ -> {key,:failure}
+          catch
+            NoNodes -> {key,:no_nodes}
+            NodesUnresponsive -> {key,:nodes_unresponsive}
             _ -> {key,:failure}
           end
         end)

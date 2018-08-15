@@ -1,0 +1,8 @@
+run_erl [41923] Wed Aug 15 16:24:12 2018
+Args before exec of shell:
+run_erl [41923] Wed Aug 15 16:24:12 2018
+argv[0] = sh
+run_erl [41923] Wed Aug 15 16:24:12 2018
+argv[1] = -c
+run_erl [41923] Wed Aug 15 16:24:12 2018
+argv[2] = exec "/Users/user/Documents/Programming/NectarDb/bin/nectar_api/bin/nectar_api" "console" --  
