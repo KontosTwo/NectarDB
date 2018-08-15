@@ -16,7 +16,7 @@ defmodule NectarAPIWeb.CommunicationServiceTest do
 
   describe "communicate write" do
     test "succeeds after 1 write" do
-      Nodes.add_node("a@com")
+      Nodes.add_node(:a@com)
       with_mock(RPC, call: fn _node,_module,_fun,_args -> 
         :ok
       end) do
@@ -27,9 +27,9 @@ defmodule NectarAPIWeb.CommunicationServiceTest do
     end
 
     test "succeeds after 1 write to multiple nodes" do
-      Nodes.add_node("a@com")
-      Nodes.add_node("b@com")
-      Nodes.add_node("c@com")
+      Nodes.add_node(:a@com)
+      Nodes.add_node(:b@com)
+      Nodes.add_node(:c@com)
       
       with_mock(RPC, call: fn _node,_module,_fun,_args -> 
         :ok
@@ -44,7 +44,7 @@ defmodule NectarAPIWeb.CommunicationServiceTest do
     end
 
     test "succeeds after 1 delete" do
-      Nodes.add_node("a@com")
+      Nodes.add_node(:a@com)
       with_mock(RPC, call: fn _node,_module,_fun,_args -> 
         :ok
       end) do
@@ -55,9 +55,9 @@ defmodule NectarAPIWeb.CommunicationServiceTest do
     end
 
     test "succeeds after 1 delete to multiple nodes" do
-      Nodes.add_node("a@com")
-      Nodes.add_node("b@com")
-      Nodes.add_node("c@com")
+      Nodes.add_node(:a@com)
+      Nodes.add_node(:b@com)
+      Nodes.add_node(:c@com)
       
       with_mock(RPC, call: fn _node,_module,_fun,_args -> 
         :ok
@@ -75,7 +75,7 @@ defmodule NectarAPIWeb.CommunicationServiceTest do
   describe "communicate read" do
         
     test "succeeds after 1 read" do
-      Nodes.add_node("a@com")
+      Nodes.add_node(:a@com)
       
       with_mock(RPC, call: fn _node,_module,_fun,_args -> 
         2
@@ -86,9 +86,9 @@ defmodule NectarAPIWeb.CommunicationServiceTest do
     end
 
     test "succeeds after 1 read from multiple nodes" do
-      Nodes.add_node("a@com")
-      Nodes.add_node("b@com")
-      Nodes.add_node("c@com")
+      Nodes.add_node(:a@com)
+      Nodes.add_node(:b@com)
+      Nodes.add_node(:c@com)
       
       with_mock(RPC, call: fn _node,_module,_fun,_args -> 
         2

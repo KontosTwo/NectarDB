@@ -1,0 +1,16 @@
+%% coding: utf-8
+[{release,"nectar_node","0.1.0","9.3.1",
+          [{kernel,"5.4.3","./lib/kernel-5.4.3"},
+           {stdlib,"3.4.5","./lib/stdlib-3.4.5"},
+           {compiler,"7.1.5","./lib/compiler-7.1.5"},
+           {elixir,"1.6.5","./lib/elixir-1.6.5"},
+           {iex,"1.6.5","./lib/iex-1.6.5"},
+           {mix,"1.6.5","./lib/mix-1.6.5"},
+           {sasl,"3.1.2","./lib/sasl-3.1.2"},
+           {runtime_tools,"1.12.5","./lib/runtime_tools-1.12.5"},
+           {logger,"1.6.5","./lib/logger-1.6.5"},
+           {artificery,"0.2.6","./lib/artificery-0.2.6"},
+           {distillery,"2.0.0","./lib/distillery-2.0.0"},
+           {gproc,"0.3.1","./lib/gproc-0.3.1"},
+           {nectar_node,"0.1.0","./lib/nectar_node-0.1.0"}],
+          permanent}].

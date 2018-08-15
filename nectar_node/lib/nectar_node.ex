@@ -6,4 +6,8 @@ defmodule NectarNode do
   fast writes, read-repair, load-balancing, rollbacks,
   eventual consistency, distributed modegit 
   """
+
+  def main(_) do
+    IO.inspect "Hello"
+  end
 end

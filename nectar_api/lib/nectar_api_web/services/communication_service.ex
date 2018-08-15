@@ -3,7 +3,6 @@ defmodule NectarAPIWeb.CommunicationService do
   alias NectarAPI.Broadcast.RPC
   alias NectarAPI.Util.Queue
   alias NectarAPI.Router.Nodes
-  alias NectarAPI.Exceptions.ReadNodesUnresponsive
   alias NectarAPI.Exceptions.NoNodes
   
   alias GenRetry

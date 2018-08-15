@@ -3,12 +3,13 @@ defmodule NectarNode.MixProject do
 
   def project do
     [
-      app: :nectar_db,
+      app: :nectar_node,
       version: "0.1.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       elixirc_paths: elixirc_paths(Mix.env),
+      escript: escript_config(),
     ]
   end
 
@@ -27,10 +28,15 @@ defmodule NectarNode.MixProject do
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       {:gproc, "0.3.1"},
       {:mock, "~> 0.3.0", only: :test},
+      {:distillery, "~> 2.0"},
     ]
   end
 
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_),     do: ["lib"]
+
+  defp escript_config do
+    [main_module: NectarNode]
+  end
 end

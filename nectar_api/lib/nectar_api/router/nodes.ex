@@ -3,9 +3,6 @@ defmodule NectarAPI.Router.Nodes do
 
   alias NectarAPI.Util.Queue
 
-  @type node_name :: String.t
-  @type node_ :: atom
-
   @me __MODULE__
 
   @spec start_link(any) :: {:ok, pid}
@@ -13,12 +10,11 @@ defmodule NectarAPI.Router.Nodes do
     Agent.start_link(fn -> Queue.new() end, name: @me)
   end
 
-  @spec add_node(node_name) :: :ok
+  @spec add_node(node) :: :ok
   def add_node(node) do
     Agent.update(@me, fn nodes -> 
-      atomic_node = String.to_atom(node)
-      if(!Queue.member?(nodes,atomic_node)) do
-        Queue.insert(nodes, atomic_node)
+      if(!Queue.member?(nodes,node)) do
+        Queue.insert(nodes, node)
       else
         nodes
       end

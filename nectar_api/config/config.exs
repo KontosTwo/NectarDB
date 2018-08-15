@@ -14,6 +14,7 @@ config :nectar_api, NectarAPIWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "jvGA74JWlWgYdlSG3JGyCvoDSnmfAQICn4HNb3wJSHO/Oc/OCnWxEaZK18JfJOvc",
   render_errors: [view: NectarAPIWeb.ErrorView, accepts: ~w(html json)],
+  server: true,
   pubsub: [name: NectarAPI.PubSub,
            adapter: Phoenix.PubSub.PG2]
 

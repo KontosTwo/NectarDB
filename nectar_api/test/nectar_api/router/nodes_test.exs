@@ -10,20 +10,20 @@ defmodule NectarAPI.Router.NodesTest do
 
   describe "adding and getting nodes" do
     test "saves node" do
-      Nodes.add_node("a@com")
+      Nodes.add_node(:a@com)
       assert [:a@com] == Nodes.all_nodes()
     end
 
     test "won't save the same node twice" do
-      Nodes.add_node("a@com")
-      Nodes.add_node("a@com")      
+      Nodes.add_node(:a@com)
+      Nodes.add_node(:a@com)      
       assert [:a@com] == Nodes.all_nodes()
     end
 
     test "saves multiple nodes" do
-      Nodes.add_node("a@com")
-      Nodes.add_node("b@com")
-      Nodes.add_node("c@com")      
+      Nodes.add_node(:a@com)
+      Nodes.add_node(:b@com)
+      Nodes.add_node(:c@com)      
       assert [:a@com,:b@com,:c@com] == Nodes.all_nodes()
     end
 
@@ -38,14 +38,14 @@ defmodule NectarAPI.Router.NodesTest do
     end
 
     test "one node" do
-      Nodes.add_node("a@com")
+      Nodes.add_node(:a@com)
       assert :a@com == Nodes.next_node()
     end
 
     test "multiple nodes" do
-      Nodes.add_node("a@com")
-      Nodes.add_node("b@com")
-      Nodes.add_node("c@com")      
+      Nodes.add_node(:a@com)
+      Nodes.add_node(:b@com)
+      Nodes.add_node(:c@com)      
       assert :a@com == Nodes.next_node()
       assert :b@com == Nodes.next_node()
       assert :c@com == Nodes.next_node()
