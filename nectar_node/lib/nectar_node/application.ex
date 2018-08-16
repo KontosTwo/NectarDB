@@ -27,7 +27,7 @@ defmodule NectarNode.Application do
       if(successful) do
         :rpc.call(api_node, NectarAPI.Router.Nodes, :add_node, [Node.self()])
         children = [
-          supervisor(DataSupervisor,[[]]),
+          supervisor(DataSupervisor,[api_node]),
           worker(Server, [[]]),    
           supervisor(Task.Supervisor,[[name: NectarNode.TaskSupervisor]])
         ]

@@ -6,7 +6,7 @@ defmodule NectarNode.Oplog do
   @type key :: any
   @type value :: any
   @type time :: integer
-  @type log :: {:write, key, value} | {:delete, key} | {:read, key} | {:rollback, time}
+  @type log :: {:write, key, value} | {:delete, key} | {:read, key}
 
   @spec start_link(any) :: {:ok, pid}
   def start_link(_args) do

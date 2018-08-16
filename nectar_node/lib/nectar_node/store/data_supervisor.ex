@@ -9,18 +9,18 @@ defmodule NectarNode.DataSupervisor do
   alias NectarNode.Recovery
   alias NectarNode.Changelog
   
-  @spec start_link(any) :: {:ok, pid}
-  def start_link(_args) do
-    Supervisor.start_link(__MODULE__,:no_args,name: @me)
+  @spec start_link(node) :: {:ok, pid}
+  def start_link(api_node) do
+    Supervisor.start_link(__MODULE__,api_node,name: @me)
   end
 
   @impl true
-  def init(:no_args) do
+  def init(api_node) do
     children = [
       worker(Memtable,[[]]),
       worker(Oplog,[[]]),
       worker(Store,[[]]),
-      worker(Recovery,[[]]),
+      worker(Recovery,[api_node]),
       worker(Changelog,[[]]),
     ]
 

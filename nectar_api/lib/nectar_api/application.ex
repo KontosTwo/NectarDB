@@ -3,6 +3,7 @@ defmodule NectarAPI.Application do
 
   alias NectarAPI.Router.Nodes
   alias NectarAPI.Time.Clock
+  alias NectarAPI.Broadcast.Hub
   alias GenRetry
   
 
@@ -19,7 +20,8 @@ defmodule NectarAPI.Application do
       # {NectarNode.Worker, arg},
       supervisor(NectarAPIWeb.Endpoint, []),
       worker(Nodes,[[]]),
-      worker(Clock,[[]])
+      worker(Clock,[[]]),
+      worker(Hub,[[]])
     ], else: []
     # Define workers and child supervisors to be supervised
     

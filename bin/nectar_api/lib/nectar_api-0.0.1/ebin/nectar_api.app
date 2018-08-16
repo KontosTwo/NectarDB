@@ -5,6 +5,7 @@
                              phoenix_ecto]},
               {description,"nectar_api"},
               {modules,['Elixir.NectarAPI','Elixir.NectarAPI.Application',
+                        'Elixir.NectarAPI.Broadcast.Hub',
                         'Elixir.NectarAPI.Broadcast.RPC',
                         'Elixir.NectarAPI.Exceptions.NoNodes',
                         'Elixir.NectarAPI.Exceptions.NodesUnresponsive',
