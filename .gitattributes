@@ -1,0 +1,5 @@
+bin/* linguist-vendored=false
+nectar_api/rel/* linguist-vendored=false
+nectar_node/rel/* linguist-vendored=false
+nectar_api/.elixir_ls/* linguist-vendored=false
+nectar_node/.elixir_ls/* linguist-vendored=false
