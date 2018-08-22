@@ -7,6 +7,8 @@ Supervisors, and Nodes in Elixir
 Note: NectarDB only works on OSX (Macs)
 
 ## Installation
+1. Execute `brew install erlang` to install the erlang dependencies
+2. Execute `brew install openssl` to install OpenSSL
 1. Clone the repository by executing `git clone https://github.com/KontosTwo/NectarDB.git`
 2. Navigate to NectarDB/bin
 3. Execute `chmod +x nectar_node.sh` and `chmod +x nectar_api.sh`
