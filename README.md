@@ -16,7 +16,7 @@ Note: NectarDB only works on OSX (Macs)
 ## Usage
 ### Starting the API
 1. Open a terminal session and navigate to NectarDB/bin
-2. Execute `./nectar_api.sh <PORT NUMBER>` and wait for a message in the format of "NectarAPI started at node <name of the api node>"
+2. Execute `./nectar_api.sh <PORT NUMBER>` and wait for a message in the format of `"NectarAPI started at node <name of the api node>"`
 3. You may have to allow beam.smp and other apps to allow connections
   
 ### Starting a node
