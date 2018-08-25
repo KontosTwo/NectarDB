@@ -25,7 +25,7 @@ Note: NectarDB only works on OSX (Macs)
 3. You may have to allow beam.smp and other apps to allow connections
 
 ### Querying through REST API
-1. Write data with the following POST request to localhost:<PORT NUMBER>/write, Content-Type set to application/json. You may have as many writes and deletes as you want. 
+1. Write data with the following POST request to `localhost:<PORT NUMBER>/write`, Content-Type set to application/json. You may have as many writes and deletes as you want. 
 ```json
 {
 	"writes" : [
@@ -47,7 +47,7 @@ If the write is successful you will get a message
   "message": "Successful write!"
 }
 ```
-2. Read data with the following POST request to localhost:<PORT NUMBER>/read, Content-Type set to application/json. You may have as many reads as you want
+2. Read data with the following POST request to `localhost:<PORT NUMBER>/read`, Content-Type set to application/json. You may have as many reads as you want
 ```json
 {
 	"reads" : [
