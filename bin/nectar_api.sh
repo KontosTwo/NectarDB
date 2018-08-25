@@ -3,5 +3,5 @@
 function finish {
   nectar_api/bin/nectar_api stop
 }
-nectar_api/bin/nectar_api foreground
+PORT=$1 nectar_api/bin/nectar_api foreground
 trap finish EXIT
